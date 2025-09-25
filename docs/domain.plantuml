@@ -7,6 +7,7 @@ skinparam ArrowThickness 2.2
 hide empty members
 
 class "Terminal" as terminal {
+    - Results: List<Routes>
 }
 
 class "Routes" as routes {

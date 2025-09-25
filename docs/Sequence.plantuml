@@ -1,5 +1,5 @@
 @startuml Sequence Diagram
-
+title "Sequence Diagram for Searching and Viewing Train Routes"
 actor User
 participant "Terminal" as terminal
 database "DBRoutes" as DBRoutes
@@ -15,5 +15,5 @@ loop Search for Routes
     terminal --> User : "Display Sorted Results"
     end
 end
-User -> terminal : "confirm selection (route ID)"
+User -> terminal : "End"
 terminal --> User : "End Session"

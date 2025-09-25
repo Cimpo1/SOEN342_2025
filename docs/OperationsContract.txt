@@ -1,0 +1,15 @@
+Contract CO1:   SearchForRoutes
+Operation:      SearchForRoutes(String: DepartureCity, String: ArrivalCity, DateTime: DepartureTime, DateTime: Arrival Time, String: TrainType, String: Days of Operation, Int: FirstClassPrice, Int: SecondClassPrice)
+Cross Ref.:     Sequence Diagram for Searching and Viewing Train Routes
+Preconditions:  User inputs Parameters
+Postconditions: Terminal.Results is populated with routes
+
+Contract CO2:   SelectSort
+Operation:      SelectSort(String: "TimeDuration","PriceFirst", "TrainType", "PriceSecond", "Days")
+Cross Ref.:     Sequence Diagram for Searching and Viewing Train Routes
+Preconditions:  User inputs Parameters, a Search is completed
+Postconditions: 
+
+
+
+
