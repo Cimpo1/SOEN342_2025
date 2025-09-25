@@ -1,0 +1,19 @@
+@startuml Sequence Diagram
+
+actor User
+participant "Terminal" as terminal
+database "DBRoutes" as DBRoutes
+
+User -> terminal : "Access Terminal"
+loop Search for Routes
+    User -> terminal : "Search for Route (parameters array)"
+    terminal -> DBRoutes : "Query Routes (with parameters)"
+    DBRoutes --> terminal : "Return Matching Routes"
+    terminal --> User : "Display Search Results"
+    loop View Route Details
+    User -> terminal : "Select sort (parameter)"
+    terminal --> User : "Display Sorted Results"
+    end
+end
+User -> terminal : "confirm selection (route ID)"
+terminal --> User : "End Session"

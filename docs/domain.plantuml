@@ -1,0 +1,46 @@
+@startuml Domain Model
+skinparam style strictuml
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 16
+skinparam DefaultFontStyle bold
+skinparam ArrowThickness 2.2
+hide empty members
+
+class "Terminal" as terminal {
+}
+
+class "Routes" as routes {
+    - id: UUID
+    - Departure: String
+    - Destination: String
+    - DepartureTime: DateTime
+    - ArrivalTime: DateTime
+    - TrainType: String
+    - DaysOfOperation: String
+    - FirstClassPrice: Int
+    - SecondClassPrice: Int
+    - /tripDuration(): Duration
+}
+
+package "Database" <<Database>> {
+    class "DBRoutes" as DBRoutes {
+        - map<UUID, Routes> routesMap
+    }
+}
+
+
+terminal  -- DBRoutes : "accesses"
+
+DBRoutes "1" *-- "*" routes : "contains"
+
+
+
+
+
+
+
+
+
+
+
+@enduml
