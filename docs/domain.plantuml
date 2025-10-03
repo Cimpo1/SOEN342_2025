@@ -20,19 +20,44 @@ class "Routes" as routes {
     - DaysOfOperation: String
     - FirstClassPrice: Int
     - SecondClassPrice: Int
-    - /tripDuration(): Duration
 }
 
 package "Database" <<Database>> {
     class "DBRoutes" as DBRoutes {
-        - map<UUID, Routes> routesMap
+        - map<connection, Routes> routesMap
+    }
+    class "DBConnection" as DBConnection {
+        - map<Cities, Connection> config
+    }
+    class "DBCities" as DBCities {
+        - list<String> cities
     }
 }
+
+class "Connection" as connection {
+    - /tripDuration(): Duration
+    - /qtyStops(): Int
+}
+
+DBConnection "1" *-- "*" connection : "contains"
+DBCities  "1" *-- "*" cities : "contains"
+
+class "Cities" as cities {
+    - name: String
+}
+
+cities "*" -- "*" cities : "Departure/Arrival"
 
 
 terminal  -- DBRoutes : "accesses"
 
 DBRoutes "1" *-- "*" routes : "contains"
+
+(cities, cities) .. connection : "have"
+
+connection "1" -- "1..3" routes : "use"
+
+
 
 
 

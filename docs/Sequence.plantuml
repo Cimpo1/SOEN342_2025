@@ -2,12 +2,19 @@
 title "Sequence Diagram for Searching and Viewing Train Routes"
 actor User
 participant "Terminal" as terminal
+database "DBCities" as DBCities
+database "DBConnection" as DBConnection
 database "DBRoutes" as DBRoutes
+
 
 User -> terminal : "Access Terminal"
 loop Search for Routes
-    User -> terminal : "Search for Route (parameters array)"
-    terminal -> DBRoutes : "Query Routes (with parameters)"
+    User -> terminal : "Input search parameters (Departure, Destination, Time)"
+    terminal -> DBCities : "validate cities(Departure, Destination)"
+    DBCities --> terminal : "Return validation result"
+    terminal -> DBConnection : "Get connections(Departure, Destination)"
+    DBConnection --> terminal : "Return connections"
+    terminal -> DBRoutes : "Query Routes (connections)"
     DBRoutes --> terminal : "Return Matching Routes"
     terminal --> User : "Display Search Results"
     loop View Route Details
