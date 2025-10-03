@@ -121,4 +121,14 @@ public class Routes {
         this.secondClassPrice = secondClassPrice;
     }
 
+    // Override toString() method for better representation
+    @Override
+    public String toString() {
+        return "Route ID: " + routeID + ", Departure: " + departureCity + ", Arrival: " + arrivalCity
+                + ", Duration: " + tripDuration + ", Departure Time: " + departureDateTime
+                + ", Arrival Time: " + arrivalDateTime + ", Train Type: " + traintype
+                + ", Days of Operation: " + daysofoperation + ", First Class Price: " + firstClassPrice
+                + ", Second Class Price: " + secondClassPrice;
+    }
+
 }

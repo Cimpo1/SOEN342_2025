@@ -48,4 +48,10 @@ public class Connection {
         stopCities.add(city);
         qtyStops = stopCities.size();
     }
+
+    @Override
+    public String toString() {
+        return "Connection from " + departureCity + " to " + arrivalCity + " with duration " + tripDuration
+                + " and " + qtyStops + " stops.";
+    }
 }
