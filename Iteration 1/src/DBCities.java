@@ -1,20 +1,28 @@
-import java.util.ArrayList;
+import java.util.HashMap;
 
 public class DBCities {
-    private ArrayList<Cities> citiesList;
+    private HashMap<String, Cities> cityMap;
 
     public DBCities() {
-        citiesList = new ArrayList<Cities>();
+        cityMap = new HashMap<String, Cities>();
     }
 
     public void addCity(Cities city) {
-        citiesList.add(city);
+        cityMap.put(city.getName().toLowerCase(), city);
     }
 
     public boolean validateCities(String departure, String destination) {
         // Check if both cities exist in the database
-        boolean departureExists = citiesList.stream().anyMatch(city -> city.getName().equalsIgnoreCase(departure));
-        boolean destinationExists = citiesList.stream().anyMatch(city -> city.getName().equalsIgnoreCase(destination));
+        boolean departureExists = cityMap.containsKey(departure.toLowerCase());
+        boolean destinationExists = cityMap.containsKey(destination.toLowerCase());
         return departureExists && destinationExists;
+    }
+
+    public Cities getCityByName(String name) {
+        return cityMap.get(name.toLowerCase());
+    }
+
+    public String[] getAllCityNames() {
+        return cityMap.keySet().toArray(new String[0]);
     }
 }
