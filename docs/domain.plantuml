@@ -12,8 +12,6 @@ class "Terminal" as terminal {
 
 class "Routes" as routes {
     - id: UUID
-    - Departure: String
-    - Destination: String
     - DepartureTime: DateTime
     - ArrivalTime: DateTime
     - TrainType: String
@@ -56,6 +54,9 @@ DBRoutes "1" *-- "*" routes : "contains"
 (cities, cities) .. connection : "have"
 
 connection "1" -- "1..3" routes : "use"
+
+cities "1" -- "1" routes : "Departure"
+cities "1" -- "1" routes : "Destination"
 
 
 
