@@ -1,5 +1,5 @@
 Contract CO1:   SearchConnection
-Operation:      SearchForRoutes(String: DepartureCity, String: ArrivalCity, DateTime: DepartureTime)
+Operation:      searchConnection(Cities departure,Cities arrival,String day,Time time)
 Cross Ref.:     Sequence Diagram for Searching and Viewing Train Routes
 Preconditions:  User inputs Parameters
 Postconditions: Terminal.Results is populated with routes
