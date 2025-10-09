@@ -23,6 +23,8 @@ public class PopulateDB {
         Map<String, Cities> cityPool = new HashMap<>();
         // temporary routes map so we can aggregate multiple Routes per Connection
         Map<Connection, ArrayList<Routes>> tempRoutes = new HashMap<>();
+        //
+        Map<Cities,ArrayList<Connection>> connections = new HashMap<>();
 
         try (BufferedReader br = new BufferedReader(new FileReader(csvFilePath))) {
             String line = br.readLine(); // header
@@ -71,13 +73,15 @@ public class PopulateDB {
                     try {
                         firstPrice = Integer.parseInt(firstPriceStr);
                     } catch (NumberFormatException e) {
+                        System.out.println("System cannot read price integer for route id "+routeId);
                     }
                     try {
                         secondPrice = Integer.parseInt(secondPriceStr);
                     } catch (NumberFormatException e) {
+                        System.out.println("System cannot read price integer for route id "+routeId);
                     }
 
-                    Routes route = new Routes(routeId, depCity, arrCity, duration, null, null, trainType, daysOfOp,
+                    Routes route = new Routes(routeId, depCity, arrCity, duration, depTime, arrTime, trainType, daysOfOp,
                             firstPrice, secondPrice);
 
                     ArrayList<Routes> list = tempRoutes.get(conn);
@@ -95,6 +99,8 @@ public class PopulateDB {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        
 
         // push aggregated routes into DBRoutes
         for (Map.Entry<Connection, ArrayList<Routes>> e : tempRoutes.entrySet()) {

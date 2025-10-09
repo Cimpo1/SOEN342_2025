@@ -1,4 +1,5 @@
 import java.time.Duration;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class Routes {
@@ -6,15 +7,15 @@ public class Routes {
     private Cities departureCity;
     private Cities arrivalCity;
     private Duration tripDuration;
-    private DateTimeFormatter departureDateTime;
-    private DateTimeFormatter arrivalDateTime;
+    private LocalTime departureDateTime;
+    private LocalTime arrivalDateTime;
     private String traintype;
     private String daysofoperation;
     private int firstClassPrice;
     private int secondClassPrice;
 
     public Routes(String routeID, Cities departureCity, Cities arrivalCity, Duration tripDuration,
-            DateTimeFormatter departureDateTime, DateTimeFormatter arrivalDateTime, String traintype,
+            LocalTime departureDateTime, LocalTime arrivalDateTime, String traintype,
             String daysofoperation, int firstClassPrice, int secondClassPrice) {
         this.routeID = routeID;
         this.departureCity = departureCity;
@@ -57,11 +58,11 @@ public class Routes {
         return tripDuration;
     }
 
-    public DateTimeFormatter getDepartureDateTime() {
+    public LocalTime getDepartureDateTime() {
         return departureDateTime;
     }
 
-    public DateTimeFormatter getArrivalDateTime() {
+    public LocalTime getArrivalDateTime() {
         return arrivalDateTime;
     }
 
@@ -97,11 +98,11 @@ public class Routes {
         this.tripDuration = tripDuration;
     }
 
-    public void setDepartureDateTime(DateTimeFormatter departureDateTime) {
+    public void setDepartureDateTime(LocalTime departureDateTime) {
         this.departureDateTime = departureDateTime;
     }
 
-    public void setArrivalDateTime(DateTimeFormatter arrivalDateTime) {
+    public void setArrivalDateTime(LocalTime arrivalDateTime) {
         this.arrivalDateTime = arrivalDateTime;
     }
 
@@ -124,9 +125,16 @@ public class Routes {
     // Override toString() method for better representation
     @Override
     public String toString() {
+        DateTimeFormatter formatObj = DateTimeFormatter.ofPattern("HH:mm:ss");
+        String arrFTime, depFTime;
+        arrFTime = arrivalDateTime.format(formatObj);
+        depFTime = departureDateTime.format(formatObj);
+
+        //DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+
         return "Route ID: " + routeID + ", Departure: " + departureCity + ", Arrival: " + arrivalCity
-                + ", Duration: " + tripDuration + ", Departure Time: " + departureDateTime
-                + ", Arrival Time: " + arrivalDateTime + ", Train Type: " + traintype
+                + ", Duration: " + tripDuration + ", Departure Time: " + depFTime
+                + ", Arrival Time: " + arrFTime + ", Train Type: " + traintype
                 + ", Days of Operation: " + daysofoperation + ", First Class Price: " + firstClassPrice
                 + ", Second Class Price: " + secondClassPrice;
     }

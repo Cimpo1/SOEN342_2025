@@ -10,7 +10,7 @@ public class Cities {
     }
 
     public void setName(String n) {
-        this.name=n
+        this.name=n;
     }
 
     @Override
