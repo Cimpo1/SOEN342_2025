@@ -1,6 +1,7 @@
 import java.sql.Time;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class Terminal{
 
@@ -9,12 +10,18 @@ public class Terminal{
     private DBCities dbCities;
     private DBRoutes dbRoutes;
 
-    private ArrayList<Connection> results;
+    private HashSet<Connection> results;
 
     public Terminal(){
         this.dbConnection = new DBConnection();
         this.dbCities = new DBCities();
         this.dbRoutes = new DBRoutes();
+    }
+
+    public Terminal(DBConnection dbConnection, DBCities dbCities, DBRoutes dbRoutes){
+        this.dbConnection = dbConnection;
+        this.dbCities = dbCities;
+        this.dbRoutes = dbRoutes;
     }
 
     private void displayResults(){
@@ -29,9 +36,8 @@ public class Terminal{
         }
     }
 
-    public void setResults(ArrayList<Connection> connections){
+    public void setResults(HashSet<Connection> connections){
         if(connections!=null){
-            this.results= new ArrayList<>();
             this.results=connections;
         }
     }
@@ -69,8 +75,8 @@ public class Terminal{
         //NOTE: THE RATES PARAMS ARE GIVEN AS STRING, THE STRING TO INT IS HANDLED IN THE DB CONNECTION CLASS
         //IMPORTANT: FIRST RATE IS THE MAXIMUM PRICE THE USER IS WILLING TO PAY FOR FIRST CLASS
         //IMPORTANT: SECOND RATE IS THE MAXIMUM PRICE THE USER IS WILLING TO PAY FOR SECOND CLASS
-        ArrayList<Connection> directConnections = dbConnection.getDirectConnections(depCity, arrCity, day, depTime, arrTime, trainType, firstRate, secondRate);
-        ArrayList<Connection> indirectConnections;
+        HashSet<Connection> directConnections = dbConnection.getDirectConnections(depCity, arrCity, day, depTime, arrTime, trainType, firstRate, secondRate);
+        HashSet<Connection> indirectConnections;
         if(directConnections != null && directConnections.size() > 0) {
             setResults(directConnections);
         }

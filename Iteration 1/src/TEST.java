@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class TEST {
     public static void main(String[] args) {
@@ -29,12 +30,19 @@ public class TEST {
         Cities amiens = citiesDB.getCityByName("amiens");
 
         // test 2 degree connection
-        ArrayList<Connection> connectionsFromAmiens = connectionDB.getConnection(berlin);
-        for (Connection conn : connectionsFromAmiens) {
+        ArrayList<Connection> connectionsFromBerlin = connectionDB.getConnection(berlin);
+        for (Connection conn : connectionsFromBerlin) {
             if (conn.getQtyStops() == 1) {
                 System.out.println(conn);
             }
         }
+
+        
+        Cities manchester = citiesDB.getCityByName("manchester");
+        Terminal terminal = new Terminal(connectionDB, citiesDB, L.getDbRoutes());
+        HashSet<Connection> directConnections = connectionDB.getIndirectConnections(berlin, manchester, "", "", "", "", "", "");
+        System.out.println(directConnections);
+        //connectionsFromBerlin = connectionDB.getIndirectConnection("berlin","","","","","","","");
 
     }
 

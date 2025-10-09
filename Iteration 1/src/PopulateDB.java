@@ -179,7 +179,7 @@ public class PopulateDB {
                                 routeList.add(routeA);
                                 placeholderConnection = new Connection(routeO.getDepartureCity(),routeA.getArrivalCity(), duration, 1, city, commonDays, routeList);
                                 dbConnection.addConnection(placeholderConnection);
-                                System.out.println(ANSI_GREEN + "Added connection: " + placeholderConnection + ANSI_RESET);
+                                //System.out.println(ANSI_GREEN + "Added connection: " + placeholderConnection + ANSI_RESET);
                             }
                         }
                     }
