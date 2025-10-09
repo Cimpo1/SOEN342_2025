@@ -20,6 +20,9 @@ dbci->cMulti: find(departure)
 cMulti --> dbci:depCity
 dbci --> terminal:depCity
 
+
+terminal->dbci :getCity(arrival)
+
 dbci->cMulti: find(arrival)
 cMulti --> dbci:arrCity
 dbci --> terminal:arrCity

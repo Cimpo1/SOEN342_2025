@@ -24,7 +24,7 @@ public class DBConnection {
 
     public ArrayList<Connection> getConnection(Cities city) {
         ArrayList<Connection> list = map.get(city);
-        return (list == null) ? new ArrayList<>() : new ArrayList<>(list);
+        return (list == null) ? new ArrayList<>() : list;
     }
 
     public boolean validateConnection(Cities departure, Cities destination) {

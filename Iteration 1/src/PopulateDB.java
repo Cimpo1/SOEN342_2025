@@ -8,10 +8,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.HashSet;
 
+
+
 public class PopulateDB {
     private DBCities dbCities;
     private DBConnection dbConnection;
     private DBRoutes dbRoutes;
+
+    // COLORS
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_BLACK = "\u001B[30m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+    public static final String ANSI_PURPLE = "\u001B[35m";
+    public static final String ANSI_CYAN = "\u001B[36m";
+    public static final String ANSI_WHITE = "\u001B[37m";
 
     // Read the CSV file and populate the DBCities, DBConnection and DBRoutes
     // classes
@@ -130,22 +143,22 @@ public class PopulateDB {
                 setOrigin = new HashSet<Routes>();
                 setArr = new HashSet<Routes>();
                 for (Routes r : dbRoutes.getRoutes()) {
-                    
                     //add all the route that have the same departure city as the origin (from for loop)
-                    if (r.getDepartureCity().getName().equals(origin)) {
+                    if (r.getDepartureCity().getName().compareToIgnoreCase(origin) == 0) {
                         setOrigin.add(r);
                     }
                     //add all the route that have the same arrival city as the end (from for loop)
-                    else if (r.getArrivalCity().getName().equals(end)) {
+                    else if (r.getArrivalCity().getName().compareToIgnoreCase(end) == 0) {
                         setArr.add(r);
                     }
                 }
+
 
                 //check in both sets if the arrival of routes in origin set is the same as the departure in route in arrival set
                 //if there are, filter out the routes that don't operate on the same days and routes with a time between routes thats less than 30 minutes
                 for (Routes routeO : setOrigin) {
                     for (Routes routeA : setArr) {
-                        if (routeO.getArrivalCity().getName().equals(routeA.getDepartureCity().getName())) {
+                        if (routeO.getArrivalCity().getName().compareToIgnoreCase(routeA.getDepartureCity().getName()) == 0) {
                             // compare arrTime and departTime
                             duration = Duration.between(routeA.getDepartureDateTime(), routeO.getArrivalDateTime());
                             if (duration.isNegative() || duration.compareTo(Duration.ofMinutes(30)) < 0) {
@@ -164,9 +177,9 @@ public class PopulateDB {
                                 //add the routes in order
                                 routeList.add(routeO);
                                 routeList.add(routeA);
-                                placeholderConnection = new Connection(routeO.getDepartureCity(),
-                                        routeA.getArrivalCity(), duration, 1, city, commonDays, routeList);
+                                placeholderConnection = new Connection(routeO.getDepartureCity(),routeA.getArrivalCity(), duration, 1, city, commonDays, routeList);
                                 dbConnection.addConnection(placeholderConnection);
+                                System.out.println(ANSI_GREEN + "Added connection: " + placeholderConnection + ANSI_RESET);
                             }
                         }
                     }
