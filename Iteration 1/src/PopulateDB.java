@@ -25,7 +25,7 @@ public class PopulateDB {
         // temporary routes map so we can aggregate multiple Routes per Connection
         HashSet<Routes> tempRoutes = new HashSet<>();
         //
-        Map<Cities,ArrayList<Connection>> connections = new HashMap<>();
+        Map<Cities, ArrayList<Connection>> connections = new HashMap<>();
 
         try (BufferedReader br = new BufferedReader(new FileReader(csvFilePath))) {
             String line = br.readLine(); // header
@@ -65,25 +65,26 @@ public class PopulateDB {
                     if (duration.isNegative() || arrivalNextDay) {
                         duration = duration.plusDays(1);
                     }
-
-                    Connection conn = new Connection(depCity, arrCity, duration);
-                    dbConnection.addConnection(conn);
+                    // create Route and add to tempRoutes
 
                     int firstPrice = 0;
                     int secondPrice = 0;
                     try {
                         firstPrice = Integer.parseInt(firstPriceStr);
                     } catch (NumberFormatException e) {
-                        System.out.println("System cannot read price integer for route id "+routeId);
+                        System.out.println("System cannot read price integer for route id " + routeId);
                     }
                     try {
                         secondPrice = Integer.parseInt(secondPriceStr);
                     } catch (NumberFormatException e) {
-                        System.out.println("System cannot read price integer for route id "+routeId);
+                        System.out.println("System cannot read price integer for route id " + routeId);
                     }
 
-                    Routes route = new Routes(routeId, depCity, arrCity, duration, depTime, arrTime, trainType, daysOfOp,
-                            firstPrice, secondPrice);
+                    Routes route = new Routes(routeId, depCity, arrCity, duration, depTime, arrTime, trainType,
+                            daysOfOp, firstPrice, secondPrice);
+
+                    Connection conn = new Connection(depCity, arrCity, duration, daysOfOp, route);
+                    dbConnection.addConnection(conn);
 
                     tempRoutes.add(route);
 
@@ -96,40 +97,57 @@ public class PopulateDB {
             e.printStackTrace();
         }
 
-        //populate connections of 1 stop (2 routes)
-        String[] cities=dbCities.getAllCityNames();
-        HashSet<Routes> setOrigin=new HashSet<Routes>(), setArr=new HashSet<Routes>();
-        //Connection(Cities departureCity, Cities arrivalCity, Duration tripDuration, int qtyStops,ArrayList<Cities> stopCities)
-        Connection placeholderConnection ;
+        // populate connections of 1 stop (2 routes)
+        String[] cities = dbCities.getAllCityNames();
+        HashSet<Routes> setOrigin = new HashSet<Routes>(), setArr = new HashSet<Routes>();
+        // Connection(Cities departureCity, Cities arrivalCity, Duration tripDuration,
+        // int qtyStops,ArrayList<Cities> stopCities)
+        Connection placeholderConnection;
         Duration duration;
-        for(String origin:cities){
-            for(String end:cities){
-                for(Routes r : tempRoutes){
-                    if(r.getDepartureCity().getName().equals(origin)){
+        ArrayList<String> commonDays;
+        ArrayList<Cities> city;
+        ArrayList<Routes> routeList;
+        for (String origin : cities) {
+            for (String end : cities) {
+                for (Routes r : tempRoutes) {
+                    if (r.getDepartureCity().getName().equals(origin)) {
                         setOrigin.add(r);
                     }
-                    
-                    else if(r.getArrivalCity().getName().equals(end)){
+
+                    else if (r.getArrivalCity().getName().equals(end)) {
                         setArr.add(r);
                     }
                 }
-                
-                for(Routes routeO:setOrigin){
-                    for(Routes routeA:setArr){
-                        if(routeO.getArrivalCity().getName().equals(routeA.getDepartureCity().getName())){
-                            //compare arrTime and departTime
-                            duration = Duration.between(routeA.getDepartureDateTime(), routeO);
-                            if (duration.isNegative() || arrivalNextDay) {
-                                duration = duration.plusDays(1);
-                            }
 
-                            placeholderConnection=new Connection(routeO.getDepartureCity(), routeA.getArrivalCity(), null, 0, null);
+                for (Routes routeO : setOrigin) {
+                    for (Routes routeA : setArr) {
+                        if (routeO.getArrivalCity().getName().equals(routeA.getDepartureCity().getName())) {
+                            // compare arrTime and departTime
+                            duration = Duration.between(routeA.getDepartureDateTime(), routeO.getArrivalDateTime());
+                            if (duration.isNegative() || duration.compareTo(Duration.ofMinutes(30)) < 0) {
+                                continue;
+                            } else {
+                                commonDays = new ArrayList<>(routeA.getDaysofoperation());
+                                commonDays.retainAll(routeO.getDaysofoperation());
+                                if (commonDays.isEmpty()) {
+                                    continue;
+                                }
+                                city = new ArrayList<>();
+                                city.add(routeO.getArrivalCity());
+
+                                routeList = new ArrayList<>();
+                                routeList.add(routeO);
+                                routeList.add(routeA);
+                                placeholderConnection = new Connection(routeO.getDepartureCity(),
+                                        routeA.getArrivalCity(), duration, 1, city, commonDays, routeList);
+                                dbConnection.addConnection(placeholderConnection);
+                                System.out.println("Added 1-stop connection: " + placeholderConnection);
+                            }
                         }
                     }
                 }
             }
         }
-
 
         // push aggregated routes into DBRoutes
         dbRoutes.changeSet(tempRoutes);

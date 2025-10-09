@@ -1,6 +1,7 @@
 import java.time.Duration;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 public class Routes {
     private String routeID;
@@ -10,13 +11,13 @@ public class Routes {
     private LocalTime departureDateTime;
     private LocalTime arrivalDateTime;
     private String traintype;
-    private String daysofoperation;
+    private ArrayList<String> daysofoperation;
     private int firstClassPrice;
     private int secondClassPrice;
 
     public Routes(String routeID, Cities departureCity, Cities arrivalCity, Duration tripDuration,
             LocalTime departureDateTime, LocalTime arrivalDateTime, String traintype,
-            String daysofoperation, int firstClassPrice, int secondClassPrice) {
+            String days, int firstClassPrice, int secondClassPrice) {
         this.routeID = routeID;
         this.departureCity = departureCity;
         this.arrivalCity = arrivalCity;
@@ -24,9 +25,49 @@ public class Routes {
         this.departureDateTime = departureDateTime;
         this.arrivalDateTime = arrivalDateTime;
         this.traintype = traintype;
-        this.daysofoperation = daysofoperation;
         this.firstClassPrice = firstClassPrice;
         this.secondClassPrice = secondClassPrice;
+
+        // [MON, TUE, WED, THU, FRI, SAT, SUN]
+        //
+        this.daysofoperation = new ArrayList<>();
+
+        if (days.contains("-")) {
+            switch (days) {
+                case "Mon-Fri":
+                    this.daysofoperation.add("MON");
+                    this.daysofoperation.add("TUE");
+                    this.daysofoperation.add("WED");
+                    this.daysofoperation.add("THU");
+                    this.daysofoperation.add("FRI");
+                    break;
+
+                case "Sat-Sun":
+                    this.daysofoperation.add("SAT");
+                    this.daysofoperation.add("SUN");
+                    break;
+
+                default:
+                    break;
+            }
+        } else {
+            if (days.equals("Daily")) {
+                this.daysofoperation.add("MON");
+                this.daysofoperation.add("TUE");
+                this.daysofoperation.add("WED");
+                this.daysofoperation.add("THU");
+                this.daysofoperation.add("FRI");
+                this.daysofoperation.add("SAT");
+                this.daysofoperation.add("SUN");
+                return;
+            } else {
+                String[] ops = days.split(",");
+                for (String day : ops) {
+                    this.daysofoperation.add(day.trim().toUpperCase());
+                }
+            }
+        }
+
     }
 
     public Routes() {
@@ -37,7 +78,7 @@ public class Routes {
         this.departureDateTime = null;
         this.arrivalDateTime = null;
         this.traintype = "";
-        this.daysofoperation = "";
+        this.daysofoperation = new ArrayList<>();
         this.firstClassPrice = 0;
         this.secondClassPrice = 0;
     }
@@ -70,7 +111,7 @@ public class Routes {
         return traintype;
     }
 
-    public String getDaysofoperation() {
+    public ArrayList<String> getDaysofoperation() {
         return daysofoperation;
     }
 
@@ -110,7 +151,7 @@ public class Routes {
         this.traintype = traintype;
     }
 
-    public void setDaysofoperation(String daysofoperation) {
+    public void setDaysofoperation(ArrayList<String> daysofoperation) {
         this.daysofoperation = daysofoperation;
     }
 
@@ -130,7 +171,8 @@ public class Routes {
         arrFTime = arrivalDateTime.format(formatObj);
         depFTime = departureDateTime.format(formatObj);
 
-        //DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        // DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("dd-MM-yyyy
+        // HH:mm:ss");
 
         return "Route ID: " + routeID + ", Departure: " + departureCity + ", Arrival: " + arrivalCity
                 + ", Duration: " + tripDuration + ", Departure Time: " + depFTime

@@ -23,36 +23,17 @@ public class TEST {
         System.out.println("Is there a connection between Amsterdam and Berlin? "
                 + connectionDB.validateConnection(amsterdam, berlin));
 
-        // validate routes
-        DBRoutes routesDB = L.getDbRoutes();
-        ArrayList<Connection> connections = connectionDB.getConnection(amsterdam);
-        if (!connections.isEmpty()) {
-            Connection conn = connections.get(0);
-            System.out.println("Routes for the first connection from Amsterdam:");
-            ArrayList<Routes> routes = routesDB.getRoutes(conn);
-            for (Routes route : routes) {
-                System.out.println(route);
-            }
-        } else {
-            System.out.println("No connections found from Amsterdam.");
-        }
-
-        //city names trim
+        // city names trim
         System.out.println(citiesDB.getCityByName("A Coruña"));
-        System.out.println(routesDB.getRoutes(null));
-    
-        
+
         Cities amiens = citiesDB.getCityByName("amiens");
-        connections = connectionDB.getConnection(amiens);
-        if (!connections.isEmpty()) {
-            Connection conn = connections.get(2);
-            System.out.println("Routes for the third connection from amiens:");
-            ArrayList<Routes> routes = routesDB.getRoutes(conn);
-            for (Routes route : routes) {
-                System.out.println(route);
+
+        // test 2 degree connection
+        ArrayList<Connection> connectionsFromAmiens = connectionDB.getConnection(berlin);
+        for (Connection conn : connectionsFromAmiens) {
+            if (conn.getQtyStops() == 1) {
+                System.out.println(conn);
             }
-        } else {
-            System.out.println("No connections found from amiens.");
         }
     }
 
