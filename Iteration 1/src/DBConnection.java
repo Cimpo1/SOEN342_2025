@@ -212,30 +212,18 @@ public class DBConnection {
         }
         //filter out the connections that do not match the max rates
         if(firstRate!=null && !firstRate.isEmpty()){
-            int rate = Integer.parseInt(firstRate);
+            int rate1 = Integer.parseInt(firstRate);
             for(Connection conn: directConnections){
-                boolean rateMatch=false;
-                for(Routes route: conn.getRoutes()){
-                    if(route.getFirstClassPrice()<=rate){
-                        rateMatch=true;
-                    }
-                }
-                if(!rateMatch){
+                if(conn.getFirstClassPrice()>rate1){
                     directConnections.remove(conn);
                 }
             }
         }
 
         if(secondRate!=null && !secondRate.isEmpty()){
-            int rate = Integer.parseInt(secondRate);
+            int rate2 = Integer.parseInt(secondRate);
             for(Connection conn: directConnections){
-                boolean rateMatch=false;
-                for(Routes route: conn.getRoutes()){
-                    if(route.getSecondClassPrice()<=rate){
-                        rateMatch=true;
-                    }
-                }
-                if(!rateMatch){
+                if(conn.getSecondClassPrice()>rate2){
                     directConnections.remove(conn);
                 }
             }
@@ -390,14 +378,17 @@ public class DBConnection {
         if(trainType.contains(",")){
             String[] tType = trainType.split(",");
             for(Connection conn: indirectConnections){
-
+                //check if each route in the connection matches at least one of the types given
+                //if the boolean array has any false value, it means at least one route did not match any of the types given
                 boolean[] typeMatches = new boolean[conn.getRoutes().size()];
 
                 for(int i=0; i<typeMatches.length; i++){
                     typeMatches[i]=false;
                     for (String t : tType) {
+                        //check if the route matches one of the types given
                         if(conn.getRoutes().get(i).getTraintype().equalsIgnoreCase(t)){
                             typeMatches[i]=true;
+                            //no need to check other types for this route if a match is found
                             break;
                         }
                     }
@@ -412,20 +403,22 @@ public class DBConnection {
                     }
                 }
             
-
                 //if any route did not match, remove the connection
                 if(!typeMatch){
                     indirectConnections.remove(conn);
                 }
             }
         }
+        //if trainType is not a list, just a single type
         else if(trainType!=null && !trainType.isEmpty()){
             for(Connection conn: indirectConnections){
-
+                //check if each route in the connection matches the type given
+                //if the boolean array has any false value, it means at least one route did not match the type given
                 boolean[] typeMatch = new boolean[conn.getRoutes().size()];
+
                 for(int i=0; i<typeMatch.length; i++){
                     typeMatch[i]=false;
-
+                    //check if the route matches the type given
                     if(conn.getRoutes().get(i).getTraintype().equalsIgnoreCase(trainType)){
                         typeMatch[i]=true;
                     }
@@ -444,8 +437,24 @@ public class DBConnection {
             }
         }
 
+        //filter out the connections that do not match the max rates
+        if(firstRate!=null && !firstRate.isEmpty()){
+            for(Connection conn: indirectConnections){
+                int rate = Integer.parseInt(firstRate);
+                if(conn.getFirstClassPrice()>rate){
+                    indirectConnections.remove(conn);
+                }
+            }
+        }
 
-
+        if(secondRate!=null && !secondRate.isEmpty()){
+            for(Connection conn: indirectConnections){
+                int rate = Integer.parseInt(secondRate);
+                if(conn.getSecondClassPrice()>rate){
+                    indirectConnections.remove(conn);
+                }
+            }
+        }
 
         return indirectConnections;
     }
