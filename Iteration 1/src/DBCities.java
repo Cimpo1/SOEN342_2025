@@ -8,18 +8,18 @@ public class DBCities {
     }
 
     public void addCity(Cities city) {
-        cityMap.put(city.getName(), city);
+        cityMap.put(city.getName().toLowerCase(), city);
     }
 
     public boolean validateCities(String departure, String destination) {
         // Check if both cities exist in the database
-        boolean departureExists = cityMap.containsKey(departure);
-        boolean destinationExists = cityMap.containsKey(destination);
+        boolean departureExists = cityMap.containsKey(departure.toLowerCase());
+        boolean destinationExists = cityMap.containsKey(destination.toLowerCase());
         return departureExists && destinationExists;
     }
 
     public Cities getCityByName(String name) {
-        return cityMap.get(name);
+        return cityMap.get(name.toLowerCase());
     }
 
     public String[] getAllCityNames() {

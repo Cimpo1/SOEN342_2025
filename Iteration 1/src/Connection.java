@@ -6,6 +6,8 @@ public class Connection {
     private Cities arrivalCity;
     private Duration tripDuration;
     private int qtyStops;
+    private int firstClassPrice;
+    private int secondClassPrice;
     private ArrayList<Cities> stopCities;
     private ArrayList<String> daysofoperation;
     private ArrayList<Routes> routes; // to keep track of which routes are part of this connection
@@ -19,7 +21,13 @@ public class Connection {
         this.stopCities = stopCities;
         this.routes = routes;
         this.daysofoperation = days;
+        this.firstClassPrice = 0;
+        this.secondClassPrice = 0;
 
+        for(Routes r: routes){
+            this.firstClassPrice += r.getFirstClassPrice();
+            this.secondClassPrice += r.getSecondClassPrice();
+        }
     }
 
     public Connection(Cities departureCity, Cities arrivalCity, Duration tripDuration, String days, Routes route) {
@@ -30,6 +38,8 @@ public class Connection {
         this.stopCities = new ArrayList<Cities>();
         this.routes = new ArrayList<Routes>();
         this.routes.add(route);
+        this.firstClassPrice = route.getFirstClassPrice();
+        this.secondClassPrice = route.getSecondClassPrice();
 
         // [MON, TUE, WED, THU, FRI, SAT, SUN]
         //
@@ -91,6 +101,22 @@ public class Connection {
 
     public ArrayList<Cities> getStopCities() {
         return stopCities;
+    }
+
+    public ArrayList<String> getDaysOfOperation() {
+        return daysofoperation;
+    }
+
+    public ArrayList<Routes> getRoutes() {
+        return routes;
+    }
+
+    public int getFirstClassPrice() {
+        return firstClassPrice;
+    }
+
+    public int getSecondClassPrice() {
+        return secondClassPrice;
     }
 
     public void addStopCity(Cities city) {

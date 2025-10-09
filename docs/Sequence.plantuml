@@ -1,5 +1,6 @@
 @startuml Sequence Diagram
 skinparam sequenceMessageAlign center
+skinparam noteTextAlignment center
 title "System Sequence Diagram for Searching and Viewing Train Connections"
 actor User
 participant "System" as terminal
@@ -7,11 +8,19 @@ participant "System" as terminal
 User -> terminal : accessTerminal()
 terminal --> User : confirmation
 loop Search for Connections
-    User -> terminal : searchConnection(departure, arrival, day, time)
+    User -> terminal : searchConnections(departure, arrival, day, depTime, arrTime, trainType, firstRate, secondRate)
     terminal --> User : searchResults
+    note right
+        Clarification: The results will 
+        not be returned, but rather displayed.
+    endnote
     loop Sort Connections
     User -> terminal : selectSort(sortingParam)
     terminal --> User : sortedResults
+    note right
+        Clarification: The results will 
+        not be returned, but rather displayed.
+    endnote
     end
 end
 User -> terminal : end()

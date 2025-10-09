@@ -124,23 +124,25 @@ public class PopulateDB {
         
         //for(String s:cities){System.out.println(s);}
 
+        //for all the cities we create 1-stop connections with every other city (if there are 2 routes connecting them)
         for (String origin : cities) {
             for (String end : cities) {
                 setOrigin = new HashSet<Routes>();
                 setArr = new HashSet<Routes>();
                 for (Routes r : dbRoutes.getRoutes()) {
                     
-                    //System.out.println(r);
+                    //add all the route that have the same departure city as the origin (from for loop)
                     if (r.getDepartureCity().getName().equals(origin)) {
                         setOrigin.add(r);
                     }
-
+                    //add all the route that have the same arrival city as the end (from for loop)
                     else if (r.getArrivalCity().getName().equals(end)) {
                         setArr.add(r);
                     }
                 }
-                //System.out.println("Is setOrgin WORKING"+setOrigin);
 
+                //check in both sets if the arrival of routes in origin set is the same as the departure in route in arrival set
+                //if there are, filter out the routes that don't operate on the same days and routes with a time between routes thats less than 30 minutes
                 for (Routes routeO : setOrigin) {
                     for (Routes routeA : setArr) {
                         if (routeO.getArrivalCity().getName().equals(routeA.getDepartureCity().getName())) {
@@ -154,10 +156,12 @@ public class PopulateDB {
                                 if (commonDays.isEmpty()) {
                                     continue;
                                 }
+                                //keep track of stop cities (since 1 stop, the only stop city is the arrival of the 1st route || the departure of the 2nd route)
                                 city = new ArrayList<>();
                                 city.add(routeO.getArrivalCity());
 
                                 routeList = new ArrayList<>();
+                                //add the routes in order
                                 routeList.add(routeO);
                                 routeList.add(routeA);
                                 placeholderConnection = new Connection(routeO.getDepartureCity(),

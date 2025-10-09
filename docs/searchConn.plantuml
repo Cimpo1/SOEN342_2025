@@ -4,6 +4,7 @@ skinparam DefaultFontSize 16
 skinparam DefaultFontStyle bold
 skinparam ArrowThickness 2.2
 skinparam sequenceMessageAlign center
+skinparam noteTextAlignment center
 hide empty members
 
 participant ":Terminal" as terminal
@@ -12,7 +13,7 @@ collections ":Cities" as cMulti
 participant ":DBConnection" as dbco
 collections ":Connection" as connMulti
 
-->terminal:searchConnections(departure, arrival, day, time)
+->terminal:searchConnections(departure, arrival, day, depTime,arrTime, trainType, firstRate, secondRate)
 terminal->dbci :getCity(departure)
 
 dbci->cMulti: find(departure)
@@ -23,7 +24,41 @@ dbci->cMulti: find(arrival)
 cMulti --> dbci:arrCity
 dbci --> terminal:arrCity
 
-terminal->dbco:getConnections()
+terminal->dbco:getDirectConnections( depCity, arrCity, day, depTime, arrTime, trainType, firstRate, secondRate )
+dbco->connMulti: find( depCity, arrCity, day, depTime, arrTime, trainType, firstRate, secondRate, numOfStops=0 )
+connMulti --> dbco:directConnections
+dbco --> terminal:directConnections
+
+terminal -> terminal: [ directConnections.length > 0 ] setResults( directConnections )
+
+terminal->dbco:[ directConnections.length =0 ] getIndirectConnections( depCity, arrCity, day, depTime, arrTime, trainType, firstRate, secondRate )
+note right
+    Note that in our implementation, 
+    we construct indirect connections
+    in the step of populating the 
+    databases to optimize the searches.
+    Therefore, we ONLY need to search 
+    them, NOT construct them here.
+endnote
+dbco->connMulti: find( depCity, arrCity, day, depTime, arrTime, trainType, firstRate, secondRate, numOfStops!=0 )
+connMulti --> dbco:indirectConnections
+dbco --> terminal:indirectConnections
+
+terminal -> terminal: [ directConnections.length =0 ] setResults( indirectConnections )
+
+note right
+    The guard is redundant but was still added for clarity.
+    The terminal's results are only set to indirect connections
+    because no direct connections were found.
+endnote
+
+terminal ->terminal: displayResults()
+
+note right
+    If the results are empty the displayResults method
+    will display a message indicating that no connections
+    were found for the given search parameters.
+endnote
 
 
 @enduml
