@@ -9,9 +9,9 @@ public class TEST {
 
         // print the cities to verify
         DBCities citiesDB = L.getDbCities();
-        //for (String cityName : citiesDB.getAllCityNames()) {
-        //    System.out.println(cityName);
-        //}
+        // for (String cityName : citiesDB.getAllCityNames()) {
+        // System.out.println(cityName);
+        // }
 
         // Validate cities
         // is amsterdam in citiesDB?\
@@ -37,13 +37,21 @@ public class TEST {
             }
         }
 
-        
+        Cities livorno = citiesDB.getCityByName("livorno");
+        Cities arezzo = citiesDB.getCityByName("arezzo");
+
         Cities manchester = citiesDB.getCityByName("manchester");
         Terminal terminal = new Terminal(connectionDB, citiesDB, L.getDbRoutes());
-        HashSet<Connection> directConnections = connectionDB.getIndirectConnections(berlin, manchester, "", "", "", "", "", "");
-        System.out.println(directConnections);
-        //connectionsFromBerlin = connectionDB.getIndirectConnection("berlin","","","","","","","");
+        // HashSet<Connection> directConnections =
+        // connectionDB.getIndirectConnections(berlin, manchester, "", "", "", "", "",
+        // "");
+        // System.out.println(directConnections);
+        // connectionsFromBerlin =
+        // connectionDB.getIndirectConnection("berlin","","","","","","","");
 
+        HashSet<Connection> directConnections = connectionDB.getIndirectConnections(livorno, arezzo, "", "", "", "", "",
+                "");
+        System.out.println(directConnections);
     }
 
 }

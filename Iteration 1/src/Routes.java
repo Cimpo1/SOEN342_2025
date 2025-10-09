@@ -46,6 +46,11 @@ public class Routes {
                     this.daysofoperation.add("SAT");
                     this.daysofoperation.add("SUN");
                     break;
+                case "Fri-Sun":
+                    this.daysofoperation.add("FRI");
+                    this.daysofoperation.add("SAT");
+                    this.daysofoperation.add("SUN");
+                    break;
 
                 default:
                     break;
