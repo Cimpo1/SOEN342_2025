@@ -44,12 +44,12 @@ public class PopulateDB {
                 String firstPriceStr = fields[7].trim();
                 String secondPriceStr = fields[8].trim();
 
-                Cities depCity = cityPool.computeIfAbsent(depName.toLowerCase(), k -> {
+                Cities depCity = cityPool.computeIfAbsent(depName, k -> {
                     Cities c = new Cities(depName);
                     dbCities.addCity(c);
                     return c;
                 });
-                Cities arrCity = cityPool.computeIfAbsent(arrName.toLowerCase(), k -> {
+                Cities arrCity = cityPool.computeIfAbsent(arrName, k -> {
                     Cities c = new Cities(arrName);
                     dbCities.addCity(c);
                     return c;
@@ -87,6 +87,7 @@ public class PopulateDB {
                     dbConnection.addConnection(conn);
 
                     tempRoutes.add(route);
+                    dbRoutes.addRoutes(route);
 
                 } catch (Exception ex) {
                     // skip malformed time/line but continue parsing rest
@@ -97,9 +98,21 @@ public class PopulateDB {
             e.printStackTrace();
         }
 
+        System.out.println("Total cities loaded: " + dbCities.getAllCityNames().length);
+        System.out.println("Total connections loaded: " + dbConnection.getAllConnections().size());
+        System.out.println("======================================================================");
+        System.out.println("======================================================================");
+        System.out.println("======================================================================");
+        System.out.println("======================================================================");
+        System.out.println("======================================================================");
+        System.out.println("======================================================================");
+        System.out.println("======================================================================");
+        System.out.println("======================================================================");
         // populate connections of 1 stop (2 routes)
         String[] cities = dbCities.getAllCityNames();
-        HashSet<Routes> setOrigin = new HashSet<Routes>(), setArr = new HashSet<Routes>();
+        HashSet<Routes> setOrigin, setArr;
+        setOrigin = new HashSet<Routes>();
+        setArr = new HashSet<Routes>();
         // Connection(Cities departureCity, Cities arrivalCity, Duration tripDuration,
         // int qtyStops,ArrayList<Cities> stopCities)
         Connection placeholderConnection;
@@ -107,9 +120,17 @@ public class PopulateDB {
         ArrayList<String> commonDays;
         ArrayList<Cities> city;
         ArrayList<Routes> routeList;
+
+        
+        //for(String s:cities){System.out.println(s);}
+
         for (String origin : cities) {
             for (String end : cities) {
-                for (Routes r : tempRoutes) {
+                setOrigin = new HashSet<Routes>();
+                setArr = new HashSet<Routes>();
+                for (Routes r : dbRoutes.getRoutes()) {
+                    
+                    //System.out.println(r);
                     if (r.getDepartureCity().getName().equals(origin)) {
                         setOrigin.add(r);
                     }
@@ -118,6 +139,7 @@ public class PopulateDB {
                         setArr.add(r);
                     }
                 }
+                //System.out.println("Is setOrgin WORKING"+setOrigin);
 
                 for (Routes routeO : setOrigin) {
                     for (Routes routeA : setArr) {
@@ -141,7 +163,6 @@ public class PopulateDB {
                                 placeholderConnection = new Connection(routeO.getDepartureCity(),
                                         routeA.getArrivalCity(), duration, 1, city, commonDays, routeList);
                                 dbConnection.addConnection(placeholderConnection);
-                                System.out.println("Added 1-stop connection: " + placeholderConnection);
                             }
                         }
                     }

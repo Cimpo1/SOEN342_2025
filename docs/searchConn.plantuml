@@ -1,0 +1,29 @@
+@startuml searchConn Interaction Sequence Diagram
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 16
+skinparam DefaultFontStyle bold
+skinparam ArrowThickness 2.2
+skinparam sequenceMessageAlign center
+hide empty members
+
+participant ":Terminal" as terminal
+participant ":DBCities" as dbci
+collections ":Cities" as cMulti
+participant ":DBConnection" as dbco
+collections ":Connection" as connMulti
+
+->terminal:searchConnections(departure, arrival, day, time)
+terminal->dbci :getCity(departure)
+
+dbci->cMulti: find(departure)
+cMulti --> dbci:depCity
+dbci --> terminal:depCity
+
+dbci->cMulti: find(arrival)
+cMulti --> dbci:arrCity
+dbci --> terminal:arrCity
+
+terminal->dbco:getConnections()
+
+
+@enduml

@@ -8,9 +8,9 @@ public class TEST {
 
         // print the cities to verify
         DBCities citiesDB = L.getDbCities();
-        for (String cityName : citiesDB.getAllCityNames()) {
-            System.out.println(cityName);
-        }
+        //for (String cityName : citiesDB.getAllCityNames()) {
+        //    System.out.println(cityName);
+        //}
 
         // Validate cities
         // is amsterdam in citiesDB?\

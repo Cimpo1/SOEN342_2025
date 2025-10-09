@@ -25,14 +25,14 @@ public class Terminal{
         System.out.println("Thank you for using the Travel Terminal. Goodbye!");
     }
 
-    public void searchConnection(String departure, String arrival, String day, DateTimeFormatter time){
+    public void searchConnections(String departure, String arrival, String day, String time){
         //search connection between cities
         System.out.println("Searching for connections between cities...");
 
         Cities depCity = dbCities.getCityByName(departure);
         Cities arrCity = dbCities.getCityByName(arrival);
 
-        this.results=dbConnection.get
+        //this.results=dbConnection.get
     }
 
 }
