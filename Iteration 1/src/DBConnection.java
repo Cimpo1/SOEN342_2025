@@ -63,7 +63,7 @@ public class DBConnection {
 
         //filter out the connections with a different city from the arrival one
         for(Connection conn: directConnections){
-            if(!conn.getArrivalCity().equals(arrCity)){
+            if(conn.getArrivalCity().getName().compareToIgnoreCase(arrCity.getName())!=0){
                 directConnections.remove(conn);
             }
         }
