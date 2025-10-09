@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.HashSet;
 
 public class PopulateDB {
     private DBCities dbCities;
@@ -22,7 +23,7 @@ public class PopulateDB {
         // keep a single Cities instance per city name to ensure map lookups work
         Map<String, Cities> cityPool = new HashMap<>();
         // temporary routes map so we can aggregate multiple Routes per Connection
-        Map<Connection, ArrayList<Routes>> tempRoutes = new HashMap<>();
+        HashSet<Routes> tempRoutes = new HashSet<>();
         //
         Map<Cities,ArrayList<Connection>> connections = new HashMap<>();
 
@@ -84,12 +85,7 @@ public class PopulateDB {
                     Routes route = new Routes(routeId, depCity, arrCity, duration, depTime, arrTime, trainType, daysOfOp,
                             firstPrice, secondPrice);
 
-                    ArrayList<Routes> list = tempRoutes.get(conn);
-                    if (list == null) {
-                        list = new ArrayList<>();
-                        tempRoutes.put(conn, list);
-                    }
-                    list.add(route);
+                    tempRoutes.add(route);
 
                 } catch (Exception ex) {
                     // skip malformed time/line but continue parsing rest
@@ -100,12 +96,43 @@ public class PopulateDB {
             e.printStackTrace();
         }
 
-        
+        //populate connections of 1 stop (2 routes)
+        String[] cities=dbCities.getAllCityNames();
+        HashSet<Routes> setOrigin=new HashSet<Routes>(), setArr=new HashSet<Routes>();
+        //Connection(Cities departureCity, Cities arrivalCity, Duration tripDuration, int qtyStops,ArrayList<Cities> stopCities)
+        Connection placeholderConnection ;
+        Duration duration;
+        for(String origin:cities){
+            for(String end:cities){
+                for(Routes r : tempRoutes){
+                    if(r.getDepartureCity().getName().equals(origin)){
+                        setOrigin.add(r);
+                    }
+                    
+                    else if(r.getArrivalCity().getName().equals(end)){
+                        setArr.add(r);
+                    }
+                }
+                
+                for(Routes routeO:setOrigin){
+                    for(Routes routeA:setArr){
+                        if(routeO.getArrivalCity().getName().equals(routeA.getDepartureCity().getName())){
+                            //compare arrTime and departTime
+                            duration = Duration.between(routeA.getDepartureDateTime(), routeO);
+                            if (duration.isNegative() || arrivalNextDay) {
+                                duration = duration.plusDays(1);
+                            }
+
+                            placeholderConnection=new Connection(routeO.getDepartureCity(), routeA.getArrivalCity(), null, 0, null);
+                        }
+                    }
+                }
+            }
+        }
+
 
         // push aggregated routes into DBRoutes
-        for (Map.Entry<Connection, ArrayList<Routes>> e : tempRoutes.entrySet()) {
-            dbRoutes.addRoutes(e.getKey(), e.getValue());
-        }
+        dbRoutes.changeSet(tempRoutes);
 
         // At this point dbCities, dbConnection and dbRoutes have been populated.
         // You can expose them, store them as fields, or return them depending on how
