@@ -1,0 +1,15 @@
+@startuml Use Case Diagram
+left to right direction
+
+actor User as user
+rectangle Terminal {
+    usecase "SearchConnection" as UC1
+    usecase "SelectSort" as UC2
+    usecase "Access Terminal" as UC3
+    usecase "End" as UC4
+}
+user -- UC3
+user -- UC1
+user -- UC2
+user -- UC4
+@enduml
