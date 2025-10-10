@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.HashSet;
 
-
-
 public class PopulateDB {
     private DBCities dbCities;
     private DBConnection dbConnection;
@@ -36,9 +34,7 @@ public class PopulateDB {
         // keep a single Cities instance per city name to ensure map lookups work
         Map<String, Cities> cityPool = new HashMap<>();
         // temporary routes map so we can aggregate multiple Routes per Connection
-        HashSet<Routes> tempRoutes = new HashSet<>();
-        //
-        Map<Cities, ArrayList<Connection>> connections = new HashMap<>();
+        // HashSet<Routes> tempRoutes = new HashSet<>();
 
         try (BufferedReader br = new BufferedReader(new FileReader(csvFilePath))) {
             String line = br.readLine(); // header
@@ -99,7 +95,7 @@ public class PopulateDB {
                     Connection conn = new Connection(depCity, arrCity, duration, daysOfOp, route);
                     dbConnection.addConnection(conn);
 
-                    tempRoutes.add(route);
+                    // tempRoutes.add(route);
                     dbRoutes.addRoutes(route);
 
                 } catch (Exception ex) {
@@ -134,31 +130,34 @@ public class PopulateDB {
         ArrayList<Cities> city;
         ArrayList<Routes> routeList;
 
-        
-        //for(String s:cities){System.out.println(s);}
+        // for(String s:cities){System.out.println(s);}
 
-        //for all the cities we create 1-stop connections with every other city (if there are 2 routes connecting them)
+        // for all the cities we create 1-stop connections with every other city (if
+        // there are 2 routes connecting them)
         for (String origin : cities) {
             for (String end : cities) {
                 setOrigin = new HashSet<Routes>();
                 setArr = new HashSet<Routes>();
                 for (Routes r : dbRoutes.getRoutes()) {
-                    //add all the route that have the same departure city as the origin (from for loop)
+                    // add all the route that have the same departure city as the origin (from for
+                    // loop)
                     if (r.getDepartureCity().getName().compareToIgnoreCase(origin) == 0) {
                         setOrigin.add(r);
                     }
-                    //add all the route that have the same arrival city as the end (from for loop)
+                    // add all the route that have the same arrival city as the end (from for loop)
                     else if (r.getArrivalCity().getName().compareToIgnoreCase(end) == 0) {
                         setArr.add(r);
                     }
                 }
 
-
-                //check in both sets if the arrival of routes in origin set is the same as the departure in route in arrival set
-                //if there are, filter out the routes that don't operate on the same days and routes with a time between routes thats less than 30 minutes
+                // check in both sets if the arrival of routes in origin set is the same as the
+                // departure in route in arrival set
+                // if there are, filter out the routes that don't operate on the same days and
+                // routes with a time between routes thats less than 30 minutes
                 for (Routes routeO : setOrigin) {
                     for (Routes routeA : setArr) {
-                        if (routeO.getArrivalCity().getName().compareToIgnoreCase(routeA.getDepartureCity().getName()) == 0) {
+                        if (routeO.getArrivalCity().getName()
+                                .compareToIgnoreCase(routeA.getDepartureCity().getName()) == 0) {
                             // compare arrTime and departTime
                             duration = Duration.between(routeA.getDepartureDateTime(), routeO.getArrivalDateTime());
                             if (duration.isNegative() || duration.compareTo(Duration.ofMinutes(30)) < 0) {
@@ -169,17 +168,20 @@ public class PopulateDB {
                                 if (commonDays.isEmpty()) {
                                     continue;
                                 }
-                                //keep track of stop cities (since 1 stop, the only stop city is the arrival of the 1st route || the departure of the 2nd route)
+                                // keep track of stop cities (since 1 stop, the only stop city is the arrival of
+                                // the 1st route || the departure of the 2nd route)
                                 city = new ArrayList<>();
                                 city.add(routeO.getArrivalCity());
 
                                 routeList = new ArrayList<>();
-                                //add the routes in order
+                                // add the routes in order
                                 routeList.add(routeO);
                                 routeList.add(routeA);
-                                placeholderConnection = new Connection(routeO.getDepartureCity(),routeA.getArrivalCity(), duration, 1, city, commonDays, routeList);
+                                placeholderConnection = new Connection(routeO.getDepartureCity(),
+                                        routeA.getArrivalCity(), duration, 1, city, commonDays, routeList);
                                 dbConnection.addConnection(placeholderConnection);
-                                //System.out.println(ANSI_GREEN + "Added connection: " + placeholderConnection + ANSI_RESET);
+                                // System.out.println(ANSI_GREEN + "Added connection: " + placeholderConnection
+                                // + ANSI_RESET);
                             }
                         }
                     }
@@ -188,7 +190,99 @@ public class PopulateDB {
         }
 
         // push aggregated routes into DBRoutes
-        dbRoutes.changeSet(tempRoutes);
+        // dbRoutes.changeSet(tempRoutes);
+
+        // third degree connections (2 stops, 3 routes) can be added similarly but
+        Duration duration1;
+        Duration duration2;
+        Duration totalDuration;
+
+        ArrayList<String> commonDays1;
+        ArrayList<String> commonDays2;
+
+        HashSet<Routes> tempRoutes = new HashSet<>();
+        tempRoutes = dbRoutes.getRoutes();
+
+        for (String o : cities) {
+            HashSet<Routes> firstLeg = new HashSet<>();
+            firstLeg = dbRoutes.getRouteByCityDep(o);
+
+            // System.out.println("First leg from " + o + ": " + firstLeg);
+
+            for (String e : cities) {
+                HashSet<Routes> thirdLeg = new HashSet<>();
+                thirdLeg = dbRoutes.getRouteByCityArr(e);
+
+                // System.out.println("Third leg to " + e + ": " + thirdLeg);
+                for (Routes r2 : tempRoutes) {
+                    for (Routes r1 : firstLeg) {
+                        for (Routes r3 : thirdLeg) {
+
+                            // Check t.dep == r1.arr
+                            if (r2.getDepartureCity().getName()
+                                    .compareToIgnoreCase(r1.getArrivalCity().getName()) == 0) {
+
+                                // check time
+                                // compare arrTime and departTime
+                                duration1 = Duration.between(r2.getDepartureDateTime(), r1.getArrivalDateTime());
+                                if (duration1.isNegative() || duration1.compareTo(Duration.ofMinutes(30)) < 0) {
+                                    continue;
+                                } else {
+
+                                    commonDays1 = new ArrayList<>(r2.getDaysofoperation());
+                                    commonDays1.retainAll(r1.getDaysofoperation());
+                                    if (commonDays1.isEmpty()) {
+                                        continue;
+                                    }
+
+                                    if (r2.getArrivalCity().getName()
+                                            .compareToIgnoreCase(r3.getDepartureCity().getName()) == 0) {
+
+                                        // check time
+                                        // compare arrTime and departTime
+                                        duration2 = Duration.between(r3.getDepartureDateTime(),
+                                                r2.getArrivalDateTime());
+                                        if (duration2.isNegative() || duration2.compareTo(Duration.ofMinutes(30)) < 0) {
+                                            continue;
+                                        } else {
+
+                                            commonDays2 = new ArrayList<>(r3.getDaysofoperation());
+                                            commonDays2.retainAll(commonDays1);
+                                            if (commonDays2.isEmpty()) {
+                                                continue;
+                                            }
+
+                                            city = new ArrayList<>();
+                                            city.add(r2.getDepartureCity());
+                                            city.add(r2.getArrivalCity());
+
+                                            totalDuration = Duration.between(r1.getDepartureDateTime(),
+                                                    r3.getArrivalDateTime());
+
+                                            routeList = new ArrayList<>();
+                                            // add the routes in order
+                                            routeList.add(r1);
+                                            routeList.add(r2);
+                                            routeList.add(r3);
+                                            placeholderConnection = new Connection(r1.getDepartureCity(),
+                                                    r3.getArrivalCity(), totalDuration, 2, city, commonDays2,
+                                                    routeList);
+                                            dbConnection.addConnection(placeholderConnection);
+                                            // System.out.println(ANSI_GREEN + "Added connection: " +
+                                            // placeholderConnection + ANSI_RESET);
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
 
         // At this point dbCities, dbConnection and dbRoutes have been populated.
         // You can expose them, store them as fields, or return them depending on how
