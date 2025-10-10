@@ -3,50 +3,53 @@ skinparam DefaultFontName Arial
 skinparam DefaultFontSize 16
 skinparam DefaultFontStyle bold
 skinparam ArrowThickness 2.2
+title Domain Model - large scale view
 hide empty members
 
 class "Terminal" as terminal {
-    - Results: List<Routes>
+    - /results
 }
+class "DBRoutes" as DBRoutes {}
+class "DBConnection" as DBConnection {}
+class "DBCities" as DBCities {}
 
 class "Routes" as routes {
-    - id: UUID
-    - Departure: String
-    - Destination: String
-    - DepartureTime: DateTime
-    - ArrivalTime: DateTime
-    - TrainType: String
-    - DaysOfOperation: String
-    - FirstClassPrice: Int
-    - SecondClassPrice: Int
+    - routeID
+    - departureDateTime
+    - arrivalDateTime
+    - traintype
+    - daysofoperation
+    - firstClassPrice
+    - secondClassPrice
 }
-
-
-class "DBRoutes" as DBRoutes {
-    - map<connection, Routes> routesMap
-}
-class "DBConnection" as DBConnection {
-    - map<Cities, Connection> config
-}
-class "DBCities" as DBCities {
-    - list<String> cities
-}
-
-
 class "Connection" as connection {
-    - /tripDuration(): Duration
-    - /qtyStops(): Int
+    - /tripDuration
+    - /qtyStops
+    - /stopCities
+    - /firstClassPrice
+    - /secondClassPrice
+    - /daysofoperation
 }
-
-DBConnection "1" *-- "*" connection : "contains"
-DBCities  "1" *-- "*" cities : "contains"
-
 class "Cities" as cities {
     - name: String
 }
+note right of cities
+    Because plantuml does not support
+    manual layout editing, the diagram
+    is split into 3 files to clarify the
+    relationships between classes Cities, 
+    Routes and Connection.
+end note
 
-cities "*" -- "*" cities : "Departure/Arrival"
 
+
+DBConnection *-- "*  " connection
+DBCities  *-- "* " cities
+DBRoutes  *-- "*" routes
+
+
+
+cities "1..*    " -- "1..*      " cities 
 
 terminal  -- DBRoutes : "accesses"
 
@@ -54,30 +57,17 @@ terminal  -- DBCities : "accesses"
 
 terminal  -- DBConnection : "accesses"
 
-DBCities  -[hidden]> DBConnection : "accesses"
-DBConnection  -[hidden]> DBRoutes : "accesses"
-connection  -[hidden]> routes : "accesses"
-
-DBRoutes "1" *-- "*" routes : "contains"
-
+DBConnection  -[hidden]> DBCities: "accesses"
+DBCities  -[hidden]> DBRoutes: "acces             ses"
+connection  -[hidden]> cities: "accesses"
+cities  -[hidden]> routes: "accesses"
 
 (cities, cities) .. connection
 
-connection "1" -- "1..3" routes : "use"
+connection "1" -- "1..3   " routes : "use"
 
-cities "1 departure" -- "1" routes
+cities "1" -right- "1" routes
 
-cities "1 arrival" -- "1" routes
-
-
-
-
-
-
-
-
-
-
-
+cities "1" -right- "1" routes
 
 @enduml

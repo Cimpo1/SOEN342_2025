@@ -28,8 +28,6 @@ public class Routes {
         this.firstClassPrice = firstClassPrice;
         this.secondClassPrice = secondClassPrice;
 
-        // [MON, TUE, WED, THU, FRI, SAT, SUN]
-        //
         this.daysofoperation = new ArrayList<>();
 
         if (days.contains("-")) {
