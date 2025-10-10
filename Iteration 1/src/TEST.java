@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class TEST {
     public static void main(String[] args) {
@@ -8,9 +9,9 @@ public class TEST {
 
         // print the cities to verify
         DBCities citiesDB = L.getDbCities();
-        for (String cityName : citiesDB.getAllCityNames()) {
-            System.out.println(cityName);
-        }
+        // for (String cityName : citiesDB.getAllCityNames()) {
+        // System.out.println(cityName);
+        // }
 
         // Validate cities
         // is amsterdam in citiesDB?\
@@ -23,19 +24,34 @@ public class TEST {
         System.out.println("Is there a connection between Amsterdam and Berlin? "
                 + connectionDB.validateConnection(amsterdam, berlin));
 
-        // validate routes
-        DBRoutes routesDB = L.getDbRoutes();
-        ArrayList<Connection> connections = connectionDB.getConnection(amsterdam);
-        if (!connections.isEmpty()) {
-            Connection conn = connections.get(0);
-            System.out.println("Routes for the first connection from Amsterdam:");
-            ArrayList<Routes> routes = routesDB.getRoutes(conn);
-            for (Routes route : routes) {
-                System.out.println(route);
+        // city names trim
+        System.out.println(citiesDB.getCityByName("A Coruña"));
+
+        Cities amiens = citiesDB.getCityByName("amiens");
+
+        // test 2 degree connection
+        ArrayList<Connection> connectionsFromBerlin = connectionDB.getConnection(berlin);
+        for (Connection conn : connectionsFromBerlin) {
+            if (conn.getQtyStops() == 1) {
+                System.out.println(conn);
             }
-        } else {
-            System.out.println("No connections found from Amsterdam.");
         }
+
+        Cities livorno = citiesDB.getCityByName("livorno");
+        Cities arezzo = citiesDB.getCityByName("arezzo");
+
+        Cities manchester = citiesDB.getCityByName("manchester");
+        Terminal terminal = new Terminal(connectionDB, citiesDB, L.getDbRoutes());
+        // HashSet<Connection> directConnections =
+        // connectionDB.getIndirectConnections(berlin, manchester, "", "", "", "", "",
+        // "");
+        // System.out.println(directConnections);
+        // connectionsFromBerlin =
+        // connectionDB.getIndirectConnection("berlin","","","","","","","");
+
+        HashSet<Connection> directConnections = connectionDB.getIndirectConnections(livorno, arezzo, "", "", "", "", "",
+                "");
+        System.out.println(directConnections);
     }
 
 }
