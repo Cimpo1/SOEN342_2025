@@ -8,16 +8,16 @@ Contract CO2:   SelectSort
 Operation:      SelectSort(Integer option)
 Cross Ref.:     Sequence Diagram for Searching and Viewing Train Routes
 Preconditions:  User inputs Parameters, a Search is completed
-Postconditions: None
+Postconditions: Sorted connections
 
 Contract CO3:   Access Terminal
 Operation:      AccessTerminal()
 Cross Ref.:     Sequence Diagram for Searching and Viewing Train Routes
 Preconditions:  User is present
-Postconditions: None
+Postconditions: Terminal Opens
 
 Contract CO4:   End
 Operation:      End()
 Cross Ref.:     Sequence Diagram for Searching and Viewing Train Routes
 Preconditions:  User inputs End() Function
-Postconditions: None
+Postconditions: Terminal ended

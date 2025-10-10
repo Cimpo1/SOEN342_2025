@@ -1,19 +1,28 @@
 @startuml Sequence Diagram
-title "Sequence Diagram for Searching and Viewing Train Routes"
+skinparam sequenceMessageAlign center
+skinparam noteTextAlignment center
+title "System Sequence Diagram for Searching and Viewing Train Connections"
 actor User
-participant "Terminal" as terminal
-database "DBRoutes" as DBRoutes
+participant "System" as terminal
 
-User -> terminal : "Access Terminal"
-loop Search for Routes
-    User -> terminal : "Search for Route (parameters array)"
-    terminal -> DBRoutes : "Query Routes (with parameters)"
-    DBRoutes --> terminal : "Return Matching Routes"
-    terminal --> User : "Display Search Results"
-    loop View Route Details
-    User -> terminal : "Select sort (parameter)"
-    terminal --> User : "Display Sorted Results"
+User -> terminal : accessTerminal()
+terminal --> User : confirmation
+loop Search for Connections
+    User -> terminal : searchConnections(departure, arrival, day, depTime, arrTime, trainType, firstRate, secondRate)
+    terminal --> User : searchResults
+    note right
+        Clarification: The results will 
+        not be returned, but rather displayed.
+    endnote
+    loop Sort Connections
+    User -> terminal : selectSort(sortingParam)
+    terminal --> User : sortedResults
+    note right
+        Clarification: The results will 
+        not be returned, but rather displayed.
+    endnote
     end
 end
-User -> terminal : "End"
-terminal --> User : "End Session"
+User -> terminal : end()
+terminal --> User : confirmation
+@enduml

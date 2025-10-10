@@ -1,0 +1,122 @@
+@startuml Class Diagram
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 16
+skinparam DefaultFontStyle bold
+skinparam ArrowThickness 2.2
+title UML Class Diagram - Use Case : Search Connections
+hide empty members
+
+class "Terminal" as terminal {
+    - /results : HashSet<Connection>
+    + accessTerminal() : void
+    + searchConnections(String departure, String arrival, String day, String depTime, String arrTime, String trainType, String firstRate, String secondRate) : void
+    + setResults(HashSet<Connection> results) : void
+    + selectSort() : void
+    + displayResults() : void
+    + displayMenu() : void
+    + displaySortResults() : void
+    + displayEnd() : void
+    + end() : void
+}
+class "DBRoutes" as DBRoutes {
+    - map : HashSet<Routes>
+    + addRoutes(Routes r) : void
+    + changeSet(HashSet<Routes> set) : void
+    + getRoutes() : HashSet<Routes>
+    + validateRoutes(Routes r) : boolean
+    + getRouteByID(String routeID) : Routes
+}
+
+class "DBConnection" as DBConnection {
+    - map : HashMap<Cities, ArrayList<Connection>>
+    + addConnection(Connection conn) : void
+    + getConnection(Cities city) : ArrayList<Connection>
+    + validateConnection(Cities departure, Cities destination) : boolean
+    + getAllConnections() : ArrayList<Connection>
+    + getDirectConnections(Cities depCity, Cities arrCity, String day, String depTime, String arrTime, String trainType, String firstRate, String secondRate) : HashSet<Connection>
+    + getIndirectConnections(Cities depCity, Cities arrCity, String day, String depTime, String arrTime, String trainType, String firstRate, String secondRate) : HashSet<Connection
+}
+
+class "DBCities" as DBCities {
+    - cityMap : HashMap<String, Cities>
+    + addCity(Cities city) : void
+    + validateCities(String departure, String destination) : boolean
+    + getCityByName(String name) : Cities
+    + getAllCityNames() : String[]
+}
+
+class "Routes" as routes {
+    - routeID : String
+    - departureDateTime : LocalTime
+    - arrivalDateTime : LocalTime
+    - traintype : String
+    - daysofoperation : ArrayList<String>
+    - firstClassPrice : Integer
+    - secondClassPrice : Integer
+    +getRouteID() : String
+    +getDepartureCity() : Cities
+    +getArrivalCity() : Cities
+    +getTripDuration() : Duration
+    +getDepartureDateTime() : LocalTime
+    +getArrivalDateTime() : LocalTime
+    +getTraintype() : String
+    +getDaysofoperation() : ArrayList<String>
+    +getFirstClassPrice() : Integer
+    +getSecondClassPrice() : Integer
+}
+ 
+class "Connection" as connection {
+    - tripDuration : Duration
+    - qtyStops : Integer
+    - firstClassPrice : Integer
+    - secondClassPrice : Integer
+    - daysofoperation : ArrayList<String>
+    +getDepartureCity() : Cities
+    +getArrivalCity() : Cities
+    +getTripDuration() : Duration
+    +getQtyStops() : Integer
+    +getStopCities() : ArrayList<Cities>
+    +getDaysofoperation() : ArrayList<String>
+    +getFirstClassPrice() : Integer
+    +getSecondClassPrice() : Integer
+    +getRoutes() : ArrayList<Routes>
+    +addStopCity(Cities city) : void
+}
+class "Cities" as cities {
+    - name: String
+    +getName() : String
+}
+
+connection"*" <-up- DBConnection : "contains"
+cities" *   "  <-up-  DBCities : "contains"
+routes " *  " <-up-  DBRoutes : "contains"
+
+DBConnection  -[hidden]> DBCities: "acces             ses"
+DBCities  -[hidden]> DBRoutes: "acces             ses"
+
+
+routes"1..3   "  <-left- "1"connection : "has"
+
+connection "1 departureCity" -[hidden]-> "1" cities: "acces                    ses"
+cities "1 departureCity" -left-> "1" connection
+note "For clarity:\n1 arrivalCity -> 1 connection.\n1 departureCity -> 1 connection.\n1..2 stopCities -> 1 connection." as N2
+cities .. N2
+N2 .. connection
+connection "1 departureCity" -[hidden]-> "1" cities: "acces   sssssssss                 ses"
+cities "1 arrivalCity" -left-> "1" connection
+cities "1..2 stopCities" -left-> "1" connection
+
+
+cities "1 departureCity" -[hidden]-> "1" routes: "acces                    ses"
+cities "1 departureCity" -right-> "1" routes
+cities "1 departureCity" -[hidden]-> "1" routes: "acces                    ses"
+cities "1 arrivalCity" -right-> "1" routes
+
+DBRoutes  <-up-  terminal : "accesses"
+
+DBCities  <-up-  terminal : "accesses"
+
+DBConnection  <-up-  terminal : "accesses"
+
+
+@enduml

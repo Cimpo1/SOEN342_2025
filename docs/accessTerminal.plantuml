@@ -1,0 +1,22 @@
+@startuml accessTerminal Interaction Sequence Diagram
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 16
+skinparam DefaultFontStyle bold
+skinparam ArrowThickness 2.2
+skinparam sequenceMessageAlign center
+skinparam noteTextAlignment center
+skinparam sequenceParticipant underline
+hide empty members
+
+participant ":Terminal" as terminal
+
+->terminal:accessTerminal()
+terminal -> terminal: displayMenu()
+
+rnote right
+    The terminal displays 
+    the menu and waits for 
+    user input.
+end note
+
+@enduml
