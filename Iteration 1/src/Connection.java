@@ -59,7 +59,11 @@ public class Connection {
                     this.daysofoperation.add("SAT");
                     this.daysofoperation.add("SUN");
                     break;
-
+                
+                    case "Fri-Sun":
+                    this.daysofoperation.add("FRI");
+                    this.daysofoperation.add("SAT");
+                    this.daysofoperation.add("SUN");
                 default:
                     break;
             }
@@ -126,7 +130,9 @@ public class Connection {
 
     @Override
     public String toString() {
-        return "Connection from " + departureCity + " to " + arrivalCity + " with duration " + tripDuration
-                + " and " + qtyStops + " stops.";
+        return "============================================================\n" + //
+                "Connection from " + departureCity + " to " + arrivalCity + " with duration " + tripDuration
+                + " and " + qtyStops + " stops. \nDeparture time is " + routes.get(0).getDepartureDateTime() +"\nArrival time is " + routes.get(routes.size()-1).getArrivalDateTime()
+                + "\nFirst class price is $" + this.getFirstClassPrice() + "\nSecond class price is $" + this.getSecondClassPrice() + "\nDays of operation are " + this.daysofoperation + "\nTrain type is: " + this.routes.get(0).getTraintype();
     }
 }
