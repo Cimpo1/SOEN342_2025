@@ -1,0 +1,39 @@
+@startuml Domain Model Details (Connections, Routes, Cities)
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 16
+skinparam DefaultFontStyle bold
+skinparam ArrowThickness 2.2
+title Domain Model - view focusing on associations to cities
+hide empty members
+
+
+class "Routes" as routes {
+    - routeID
+    - departureDateTime
+    - arrivalDateTime
+    - traintype
+    - daysofoperation
+    - firstClassPrice
+    - secondClassPrice
+}
+class "Connection" as connection {
+    - id
+    - /tripDuration
+    - /qtyStops
+    - /stopCities
+    - /firstClassPrice
+    - /secondClassPrice
+    - /daysofoperation
+}
+class "Cities" as cities {
+    - name: String
+}
+
+routes "1 " -down- "1 departure" cities
+routes "1 " -down- "1 arrival" cities
+
+
+cities "1..* departure" -- "1..* arrival" cities
+(cities, cities) .. connection
+
+@enduml

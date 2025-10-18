@@ -215,4 +215,24 @@ public class Terminal{
         displayResults();
     }
 
+    public void startTripBooking(){
+        // Implementation for starting a trip booking to add after interaction design
+    }
+
+    public void addReservation(String firstName, String lastName, int age, String id, String connectionID){
+        // Implementation for adding a reservation to add after interaction design
+    }
+
+    public void endTripBooking(){
+        // Implementation for ending a trip booking to add after interaction design
+    }
+
+    public void searchTrips(){
+        // Implementation for searching trips to add after interaction design
+    }
+
+    public void viewHistoryCollection(){
+        // Implementation for viewing history collection to add after interaction design
+    }
+
 }
