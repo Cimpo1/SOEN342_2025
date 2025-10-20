@@ -1,0 +1,31 @@
+@startuml Domain Model Details (Connections, Routes)
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 16
+skinparam DefaultFontStyle bold
+skinparam ArrowThickness 2.2
+title Domain Model - view focusing on connection and routes
+hide empty members
+
+
+class "Routes" as routes {
+    - routeID
+    - departureDateTime
+    - arrivalDateTime
+    - traintype
+    - daysofoperation
+    - firstClassPrice
+    - secondClassPrice
+}
+class "Connection" as connection {
+    - id
+    - /tripDuration
+    - /qtyStops
+    - /stopCities
+    - /firstClassPrice
+    - /secondClassPrice
+    - /daysofoperation
+}
+
+routes "1..3  " -up- "1  " connection : "  uses"
+
+@enduml

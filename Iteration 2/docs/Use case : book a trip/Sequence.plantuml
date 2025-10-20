@@ -1,0 +1,36 @@
+@startuml Sequence Diagram
+skinparam sequenceMessageAlign center
+skinparam noteTextAlignment center
+title "System Sequence Diagram - Use Case : Book a trip (Includes Search Connections)"
+actor User
+participant "System" as terminal
+
+User -> terminal : accessTerminal()
+terminal --> User : confirmation
+loop Search for Connections
+    User -> terminal : searchConnections(departure, arrival, day, depTime, arrTime, trainType, firstRate, secondRate)
+    terminal --> User : searchResults
+    note right
+        Clarification: The results will 
+        not be returned, but rather displayed.
+    endnote
+
+    User -> terminal : selectConnection(connectionID)
+    terminal --> User : connectionDetails
+
+    loop Book a Trip
+        User -> terminal : startTripBooking()
+        terminal --> User : startBookingConfirmation
+
+        loop Add Reservation
+            User -> terminal : addReservation(firstName, lastName, age, id, connectionID)
+            terminal --> User : ticket
+        end
+
+        User -> terminal : endTripBooking()
+        terminal --> User : bookingConfirmation
+    end
+end
+User -> terminal : end()
+terminal --> User : confirmation
+@enduml

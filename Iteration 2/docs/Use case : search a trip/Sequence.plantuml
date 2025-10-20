@@ -1,0 +1,19 @@
+@startuml Sequence Diagram
+skinparam sequenceMessageAlign center
+skinparam noteTextAlignment center
+title "System Sequence Diagram - Use Case : Search a trip"
+actor User
+participant "System" as terminal
+
+User -> terminal : accessTerminal()
+terminal --> User : confirmation
+loop Search for Trips
+    User -> terminal : searchTrips(lastName, id)
+    terminal --> User : currentTrips, historyCollection
+
+    User -> terminal : viewHistoryCollection()
+    terminal --> User : historyCollectionTrips
+end
+User -> terminal : end()
+terminal --> User : confirmation
+@enduml
