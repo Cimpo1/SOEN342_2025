@@ -1,0 +1,45 @@
+@startuml selectConnection Interaction Sequence Diagram
+title "Interaction Sequence Diagram - selectConnection - Use Case : Book a trip"
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 16
+skinparam DefaultFontStyle bold
+skinparam ArrowThickness 2.2
+skinparam sequenceMessageAlign center
+skinparam noteTextAlignment center
+skinparam sequenceParticipant underline
+hide empty members
+
+participant ":Terminal" as terminal
+participant ":DBConnection" as dbtr
+collections ":Connection" as connMulti
+
+note over terminal
+    Note that this function is essentially useless 
+    because the client will have to enter the connection 
+    ID again for every reservation they want to make 
+    in the trip. In addition, there is no mention in the 
+    requirements of the client booking the trip as needed 
+    to be recorded separately from the clients entered for 
+    adding a reservation. Hence, this function only selects 
+    a connection for the current terminal session and does 
+    not link it to any trip or reservation.
+end note
+
+->terminal:selectConnection(connectionID)
+terminal->dbtr:getConnectionByID(connectionID)
+dbtr->connMulti: find(connectionID)
+connMulti --> dbtr:connection
+dbtr --> terminal:connection
+
+terminal --> terminal: connection
+
+note right
+    The terminal displays the confirmation 
+    of connection selection to the user. 
+    Note : This format is due to the 
+    fact that plantuml does not support a 
+    return to a non participant entity on 
+    the left of terminal.
+endnote
+
+@enduml
