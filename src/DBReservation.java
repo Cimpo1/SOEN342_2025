@@ -37,7 +37,11 @@ public class DBReservation {
 
     // set ticket for reservation
     public void setTicketForReservation(Reservation reservation, Ticket ticket) {
-        this.find(reservation).setTicket(ticket);
+        try {
+            this.find(reservation).setTicket(ticket);
+        } catch (Exception e) {
+            System.out.println("Error setting ticket for reservation: " + e.getMessage());
+        }
     }
 
     @Override

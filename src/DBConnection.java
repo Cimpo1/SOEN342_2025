@@ -562,7 +562,7 @@ public class DBConnection {
     public Connection getConnectionById(String id) {
         for (ArrayList<Connection> connList : map.values()) {
             for (Connection conn : connList) {
-                if (conn.getId().equalsIgnoreCase(id)) {
+                if (conn.getId().equals(id)) {
                     return conn;
                 }
             }

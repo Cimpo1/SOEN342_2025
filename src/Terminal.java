@@ -99,7 +99,7 @@ public class Terminal {
                                 String lastName = input.nextLine();
                                 System.out.print("Enter client's age: ");
                                 int age = Integer.parseInt(input.nextLine());
-                                System.out.print("Enter client's ID: ");
+                                System.out.print("Enter client's ID (numeric): ");
                                 int id = Integer.parseInt(input.nextLine());
                                 this.addReservation(firstName, lastName, age, id);
                                 break;
@@ -377,10 +377,22 @@ public class Terminal {
 
     public void searchTrips() {
         // Implementation for searching trips to add after interaction design
-        System.out.print("Enter Client ID to search for trips: ");
-        int ClientID = Integer.parseInt(input.nextLine());
+        System.out.print("Enter Client ID to search for trips or press \"F\" to enter last name: ");
+        String input = this.input.nextLine();
+        Client client = null;
+        if (input.equalsIgnoreCase("F")) {
+            System.out.print("Enter Client Last Name: ");
+            String lastName = this.input.nextLine();
+            client = dbClients.getClientByLastName(lastName);
+        } else {
+            try {
+                int clientID = Integer.parseInt(input);
+                client = dbClients.getClientById(clientID);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid Client ID or 'F' to search by last name.");
+            }
+        }
 
-        Client client = dbClients.getClientById(ClientID);
         if (client == null) {
             System.out.println("Invalid client.");
             return;
@@ -403,9 +415,22 @@ public class Terminal {
 
     public void viewHistoryCollection() {
         // Implementation for viewing history collection to add after interaction design
-        System.out.print("Enter Client ID to view trip history: ");
-        int ClientID = Integer.parseInt(input.nextLine());
-        Client client = dbClients.getClientById(ClientID);
+        System.out.print("Enter Client ID to view trip history or 'F' to search by last name: ");
+        String input = this.input.nextLine();
+        Client client = null;
+        if (input.equalsIgnoreCase("F")) {
+            System.out.print("Enter Client Last Name: ");
+            String lastName = this.input.nextLine();
+            client = dbClients.getClientByLastName(lastName);
+        } else {
+            try {
+                int clientID = Integer.parseInt(input);
+                client = dbClients.getClientById(clientID);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid Client ID or 'F' to search by last name.");
+            }
+        }
+
         if (client == null) {
             System.out.println("Invalid client.");
             return;
@@ -427,7 +452,7 @@ public class Terminal {
         String connectionID = input.nextLine();
         // clean input
         // example id 36b0ce83-df44-42b2-8a04-b26acbe0487d
-        connectionID = connectionID.trim().toLowerCase();
+        connectionID = connectionID.trim();
         this.selectedConnection = dbConnection.getConnectionById(connectionID);
         if (this.selectedConnection != null) {
             System.out.println("You have selected the following connection:");

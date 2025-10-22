@@ -49,6 +49,16 @@ public class DBClient {
         this.find(client).addTrip(trip);
     }
 
+    // get client by last name
+    public Client getClientByLastName(String lastName) {
+        for (Client client : clients) {
+            if (client.getLastName().equalsIgnoreCase(lastName)) {
+                return client;
+            }
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         return "DBClient{" +
