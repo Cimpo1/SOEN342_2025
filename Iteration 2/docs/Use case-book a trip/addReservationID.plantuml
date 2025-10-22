@@ -52,7 +52,7 @@ dbre --> terminal:reservation
 collections ":Reservation" as rMulti
 participant ":DBTicket" as dbti
 
-terminal->dbti:generateTicket()
+terminal->dbti:generateTicket(reservation)
 create participant "ticket:Ticket" as t
 dbti->t: create(reservation)
 t --> dbti:ticket
