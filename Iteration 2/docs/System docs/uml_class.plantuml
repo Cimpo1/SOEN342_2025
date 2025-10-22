@@ -8,6 +8,8 @@ hide empty members
 
 class "Terminal" as terminal {
     - /results : HashSet<Connection>
+    - /currTripID : String
+    - /selectedConnectionID : String
     + accessTerminal() : void
     + searchConnections(String departure, String arrival, String day, String depTime, String arrTime, String trainType, String firstRate, String secondRate) : void
     + setResults(HashSet<Connection> results) : void
@@ -89,23 +91,22 @@ class "Cities" as cities {
 }
 class "DBClient" as DBClient {}
 class "Client" as client {
-    - id
-    - firstName
-    - lastName
-    - age
-    -
+    - id : String
+    - firstName : String
+    - lastName : String
+    - age : Integer
 }
 class "DBTrip" as DBTrip {}
 class "Trip" as trip {
-    - id
+    - id : String
 }
 class "DBReservation" as DBReservation {}
 class "Reservation" as reservation {
-    - id
+    - id : String
 }
 class "DBTicket" as DBTicket {}
 class "Ticket" as ticket {
-    - id
+    - id : String
 }
 
 connection"*" <-up- DBConnection : "contains"

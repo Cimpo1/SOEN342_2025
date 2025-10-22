@@ -1,0 +1,41 @@
+@startuml endTripBooking Interaction Sequence Diagram
+title "Interaction Sequence Diagram - startTripBooking - Use Case : Book a trip"
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 16
+skinparam DefaultFontStyle bold
+skinparam ArrowThickness 2.2
+skinparam sequenceMessageAlign center
+skinparam noteTextAlignment center
+skinparam sequenceParticipant underline
+hide empty members
+
+participant ":Terminal" as terminal
+participant ":DBTrip" as dbtr
+collections ":Trip" as tripM
+
+->terminal:endTripBooking()
+terminal->dbtr:getTripByID(currTripID)
+
+note right
+    The terminal gets the up-to-date version 
+    of the current trip through the currTripID 
+    saved as an attribute to terminal to display 
+    to the user.
+endnote
+
+dbtr->tripM: find(currTripID)
+tripM --> dbtr:currentTrip
+dbtr --> terminal:currentTrip
+
+terminal --> terminal: currentTrip
+
+note right
+    The terminal displays the confirmation 
+    of booking of trip ending to the user. 
+    Note : This format is due to the 
+    fact that plantuml does not support a 
+    return to a non participant entity on 
+    the left of terminal.
+endnote
+
+@enduml

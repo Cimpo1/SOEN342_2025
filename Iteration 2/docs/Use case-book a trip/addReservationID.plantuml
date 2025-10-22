@@ -1,0 +1,117 @@
+@startuml addReservation Interaction Sequence Diagram
+title "Interaction Sequence Diagram - addReservation - Use Case : Book a trip"
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 16
+skinparam DefaultFontStyle bold
+skinparam ArrowThickness 2.2
+skinparam sequenceMessageAlign center
+skinparam noteTextAlignment center
+skinparam sequenceParticipant underline
+hide empty members
+
+participant ":Terminal" as terminal
+participant ":DBClient" as dbcl
+participant "client:Client" as client
+collections ":Client" as cMulti
+collections ":Reservation" as rMulti
+
+->terminal:addReservation(firstName, lastName, age, id, connectionID)
+terminal->dbcl:getClientByID(id)
+dbcl->cMulti: find(id)
+cMulti --> dbcl:client
+dbcl --> terminal:client
+alt [ client == null ]
+    terminal->dbcl:addClient(firstName, lastName, age, id)
+    create participant "clientAdded:Client" as clientAdded
+    dbcl->clientAdded: create(firstName, lastName, age, id)
+    clientAdded --> dbcl:client
+    dbcl->cMulti: add(client)
+    cMulti --> dbcl:confirmation
+    dbcl --> terminal:client
+end
+
+participant ":DBConnection" as dbco
+collections ":Connection" as connMulti
+participant ":DBReservation" as dbre
+
+terminal->dbco:getConnectionByID(connectionID)
+dbco->connMulti: find(connectionID)
+connMulti --> dbco:connection
+dbco --> terminal:connection
+
+terminal->dbre:addReservation(client, connection)
+create participant "reservation:Reservation" as reservation
+dbre->reservation: create(client, connection)
+reservation --> dbre:reservation
+dbre->rMulti: add(reservation)
+rMulti --> dbre:confirmation
+dbre->reservation:getReservationID()
+reservation --> dbre:reservationID
+dbre --> terminal:reservation
+
+collections ":Reservation" as rMulti
+participant ":DBTicket" as dbti
+
+terminal->dbti:generateTicket()
+create participant "ticket:Ticket" as t
+dbti->t: create(reservation)
+t --> dbti:ticket
+collections ":Ticket" as tMulti
+dbti->tMulti: add(ticket)
+tMulti --> dbti:confirmation
+dbti-->terminal:ticket
+
+terminal -> dbre: setTicketForReservation(reservation, ticket)
+dbre->rMulti: find(reservation)
+note right
+    The reservation is retrieved
+    from the database to update
+    the version existing in it 
+    in contrast to a local variable 
+    containing the reservation 
+    in the terminal instance.
+endnote
+rMulti --> dbre:reservation
+dbre -> reservation: setTicket(ticket)
+reservation --> dbre:confirmation
+dbre --> terminal:confirmation
+
+participant ":DBTrip" as dbtr
+collections ":Trip" as tripMulti
+participant "trip:Trip" as trip
+
+terminal->dbtr : addReservationToTrip(reservation, currentTripID)
+dbtr->tripMulti: find(currentTripID)
+tripMulti --> dbtr:trip
+dbtr -> trip: addReservation(reservation)
+trip --> dbtr:confirmation
+dbtr --> terminal:confirmation
+
+terminal ->dbcl: addTripToClient(client, trip)
+dbcl->cMulti: find(client)
+
+note right
+    The client is retrieved
+    from the database to update
+    the version existing in it
+    in contrast to a local variable
+    containing the client
+    in the terminal instance.
+endnote
+
+cMulti --> dbcl:client
+dbcl -> client: addTrip(trip)
+client --> dbcl:confirmation
+dbcl --> terminal:confirmation
+
+terminal -> terminal: displayTicket(ticket)
+
+note right
+    The terminal displays the ticket
+    information to the user. Note : This format
+    is due to the fact that plantuml 
+    does not support a return to a non 
+    participant entity on the left of terminal.
+endnote
+
+@enduml
