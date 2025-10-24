@@ -147,15 +147,19 @@ public class Connection {
 
     @Override
     public String toString() {
-        return "============================================================\n" + //
-                "Connection # " + this.getId() + " from " + departureCity + " to " + arrivalCity + " with duration "
+        String output = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "Connection # " + this.getId() + " \nDeparture: " + departureCity + " \nArrival: " + arrivalCity + " \nDuration: "
                 + tripDuration
-                + " and " + qtyStops + " stops. \nDeparture time is " + routes.get(0).getDepartureDateTime()
-                + "\nArrival time is " + routes.get(routes.size() - 1).getArrivalDateTime()
-                + "\nFirst class price is $" + this.getFirstClassPrice() + "\nSecond class price is $"
-                + this.getSecondClassPrice() + "\nDays of operation are " + this.daysofoperation + "\nTrain type is: "
+                + " \nStops: " + qtyStops + " \nDeparture time: " + routes.get(0).getDepartureDateTime()
+                + " \nArrival time: " + routes.get(routes.size() - 1).getArrivalDateTime()
+                + " \nFirst class price: $" + this.getFirstClassPrice() + " \nSecond class price: $"
+                + this.getSecondClassPrice() + " \nDays of operation: " + this.daysofoperation + " \nTrain type: "
                 + this.routes.get(0).getTraintype() +
-                "\nStop cities: " + this.getStopCities()
-                + "\n============================================================";
+                "\nStop cities: ";
+                for (Cities city : this.getStopCities()) {
+                    output += "\n - " + city.getName();
+                }
+                output += "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+                return output;
     }
 }

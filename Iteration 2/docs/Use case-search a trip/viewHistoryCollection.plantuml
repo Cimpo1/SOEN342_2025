@@ -1,0 +1,51 @@
+@startuml viewHistoryCollection Interaction Sequence Diagram
+title "Interaction Sequence Diagram - viewHistoryCollection - Use Case : search a trip"
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 16
+skinparam DefaultFontStyle bold
+skinparam ArrowThickness 2.2
+skinparam sequenceMessageAlign center
+skinparam noteTextAlignment center
+skinparam sequenceParticipant underline
+hide empty members
+
+participant ":Terminal" as terminal
+participant ":DBTrip" as dbtr
+collections ":Trip" as tripM
+participant ":DBClient" as dbcl
+collections ":Client" as clientM
+
+->terminal:viewHistoryCollection(lastName, id)
+terminal->dbcl:getClientByIdAndLName(lastName, id)
+dbcl->clientM:find(lastName, id)
+clientM-->dbcl:client
+dbcl-->terminal:client
+terminal->client :getTrips()
+client -->terminal:trips
+loop for each trip in trips
+    terminal->trip:getDepartureTime()
+    trip -->terminal:departureTime
+end
+
+note right
+    The terminal retrieves the trips 
+    associated with the client and 
+    checks their departure times. 
+    If the departure time is before 
+    the current time, the trip is
+    considered valid and is included
+    in the search results.
+endnote
+
+terminal --> terminal: [ departureTime.isBefore( LocalTime.now() ) ] trips
+
+note right
+    The terminal displays the valid trips
+    to the user.
+    Note : This format is due to the
+    fact that plantuml does not support a
+    return to a non participant entity on
+    the left of terminal.
+endnote
+
+@enduml

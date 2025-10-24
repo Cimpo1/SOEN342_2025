@@ -39,8 +39,8 @@ public class DBTicket {
         return null; // or throw an exception if not found
     }
 
-    // create ticket
-    public Ticket createTicket(Reservation reservation) {
+    // generate ticket
+    public Ticket generateTicket(Reservation reservation) {
         Ticket newTicket = new Ticket(reservation);
         this.tickets.add(newTicket);
         return newTicket;

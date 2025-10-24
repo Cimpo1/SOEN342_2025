@@ -1,13 +1,13 @@
 public class Reservation {
     private String id;
     private Client client;
-    private Trip trip;
+    private Connection connection;
     private Ticket ticket;
 
-    public Reservation(Client client, Trip trip) {
+    public Reservation(Client client, Connection connection) {
         this.id = java.util.UUID.randomUUID().toString();
         this.client = client;
-        this.trip = trip;
+        this.connection = connection;
     }
 
     // Getters and Setters
@@ -23,8 +23,12 @@ public class Reservation {
         this.client = client;
     }
 
-    public Trip getTrip() {
-        return trip;
+    public Connection getConnection() {
+        return connection;
+    }
+
+    public void setConnection(Connection connection) {
+        this.connection = connection;
     }
 
     public Ticket getTicket() {
@@ -37,9 +41,11 @@ public class Reservation {
 
     @Override
     public String toString() {
-        return "Reservation{" +
-                "id='" + id + '\'' +
-                ", client=" + client +
-                '}';
+        return "===================================================\n" +
+                "Reservation #" + id + "\n" +
+                "Client Details: \n" + client +
+                "\nConnection Details: \n" + connection +
+                "Ticket Details: \n" + ticket +
+                "\n===================================================\n";
     }
 }
