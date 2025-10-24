@@ -41,7 +41,7 @@ public class TEST {
         Cities arezzo = citiesDB.getCityByName("arezzo");
 
         Cities manchester = citiesDB.getCityByName("manchester");
-        Terminal terminal = new Terminal(connectionDB, citiesDB, L.getDbRoutes());
+        // Terminal terminal = new Terminal(connectionDB, citiesDB, L.getDbRoutes());
         // HashSet<Connection> directConnections =
         // connectionDB.getIndirectConnections(berlin, manchester, "", "", "", "", "",
         // "");

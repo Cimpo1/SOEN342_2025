@@ -27,7 +27,7 @@ public class Connection {
         this.firstClassPrice = 0;
         this.secondClassPrice = 0;
 
-        for(Routes r: routes){
+        for (Routes r : routes) {
             this.firstClassPrice += r.getFirstClassPrice();
             this.secondClassPrice += r.getSecondClassPrice();
         }
@@ -63,8 +63,8 @@ public class Connection {
                     this.daysofoperation.add("SAT");
                     this.daysofoperation.add("SUN");
                     break;
-                
-                    case "Fri-Sun":
+
+                case "Fri-Sun":
                     this.daysofoperation.add("FRI");
                     this.daysofoperation.add("SAT");
                     this.daysofoperation.add("SUN");
@@ -140,12 +140,22 @@ public class Connection {
         this.id = id;
     }
 
+    // get first route
+    public Routes getFirstRoute() {
+        return routes.get(0);
+    }
+
     @Override
     public String toString() {
         return "============================================================\n" + //
-                "Connection #" + this.getId() + " from " + departureCity + " to " + arrivalCity + " with duration " + tripDuration
-                + " and " + qtyStops + " stops. \nDeparture time is " + routes.get(0).getDepartureDateTime() + "\nArrival time is " + routes.get(routes.size() - 1).getArrivalDateTime()
-                + "\nFirst class price is $" + this.getFirstClassPrice() + "\nSecond class price is $" + this.getSecondClassPrice() + "\nDays of operation are " + this.daysofoperation + "\nTrain type is: " + this.routes.get(0).getTraintype() +
-                "\nStop cities: " + this.getStopCities() + "\n============================================================";
+                "Connection # " + this.getId() + " from " + departureCity + " to " + arrivalCity + " with duration "
+                + tripDuration
+                + " and " + qtyStops + " stops. \nDeparture time is " + routes.get(0).getDepartureDateTime()
+                + "\nArrival time is " + routes.get(routes.size() - 1).getArrivalDateTime()
+                + "\nFirst class price is $" + this.getFirstClassPrice() + "\nSecond class price is $"
+                + this.getSecondClassPrice() + "\nDays of operation are " + this.daysofoperation + "\nTrain type is: "
+                + this.routes.get(0).getTraintype() +
+                "\nStop cities: " + this.getStopCities()
+                + "\n============================================================";
     }
 }

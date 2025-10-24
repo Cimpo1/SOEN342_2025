@@ -1,12 +1,15 @@
 import java.util.HashSet;
 import java.util.UUID;
+import java.time.LocalTime;
 
 public class Trip {
     private String id;
     private HashSet<Reservation> reservations;
+    private LocalTime departureTime;
 
     public Trip() {
         this.id = UUID.randomUUID().toString();
+        this.reservations = new HashSet<>();
     }
 
     // Getters and Setters
@@ -26,6 +29,14 @@ public class Trip {
         this.reservations = reservations;
     }
 
+    public LocalTime getDepartureTime() {
+        return departureTime;
+    }
+
+    public void setDepartureTime(LocalTime departureTime) {
+        this.departureTime = departureTime;
+    }
+
     @Override
     public String toString() {
         return "Trip{" +
@@ -33,5 +44,5 @@ public class Trip {
                 ", reservations=" + reservations +
                 '}';
     }
-    
+
 }

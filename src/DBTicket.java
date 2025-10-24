@@ -19,6 +19,33 @@ public class DBTicket {
         this.tickets = tickets;
     }
 
+    // get ticket by reservation
+    public Ticket getTicketByReservation(Reservation reservation) {
+        for (Ticket ticket : tickets) {
+            if (ticket.getReservation().equals(reservation)) {
+                return ticket;
+            }
+        }
+        return null; // or throw an exception if not found
+    }
+
+    // get ticket by id
+    public Ticket getTicketById(String id) {
+        for (Ticket ticket : tickets) {
+            if (ticket.getId().equals(id)) {
+                return ticket;
+            }
+        }
+        return null; // or throw an exception if not found
+    }
+
+    // create ticket
+    public Ticket createTicket(Reservation reservation) {
+        Ticket newTicket = new Ticket(reservation);
+        this.tickets.add(newTicket);
+        return newTicket;
+    }
+
     @Override
     public String toString() {
         return "DBTicket{" +

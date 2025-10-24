@@ -558,4 +558,16 @@ public class DBConnection {
         return indirectConnections;
     }
 
+    // get connection by ID
+    public Connection getConnectionById(String id) {
+        for (ArrayList<Connection> connList : map.values()) {
+            for (Connection conn : connList) {
+                if (conn.getId().equals(id)) {
+                    return conn;
+                }
+            }
+        }
+        return null; // return null if no connection with the given ID is found
+    }
+
 }

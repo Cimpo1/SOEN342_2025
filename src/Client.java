@@ -4,10 +4,10 @@ public class Client {
     private String firstName;
     private String lastName;
     private int age;
-    private String id;
+    private int id;
     private HashSet<Trip> trips;
 
-    public Client(String firstName, String lastName, int age, String id) {
+    public Client(String firstName, String lastName, int age, int id) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.age = age;
@@ -40,11 +40,11 @@ public class Client {
         this.age = age;
     }
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
