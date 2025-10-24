@@ -166,31 +166,35 @@ public class Terminal {
         boolean stayLooped = true;
         while (stayLooped) {
             System.out.println(
-                    "What would you like to do? \n\t1. Go Back\n\t2. Sort by day of the week\n\t3. Sort by departure time\n\t4. Sort by arrival time\n\t5. Sort by train type\n\t6. Sort by first class cost\n\t7. Sort by second class cost\n\t8. Exit");
+                    "What would you like to do? \n\t1. Go Back\n\t2. Select Connection\n\t3. Sort by day of the week\n\t4. Sort by departure time\n\t5. Sort by arrival time\n\t6. Sort by train type\n\t7. Sort by first class cost\n\t8. Sort by second class cost\n\t9. Exit");
             String answer = input.nextLine();
             switch (answer) {
                 case "1":
                     stayLooped = false;
                     break;
                 case "2":
-                    this.selectSort("day");
+                    this.selectConnection();
+                    stayLooped = false;
                     break;
                 case "3":
-                    this.selectSort("depTime");
+                    this.selectSort("day");
                     break;
                 case "4":
-                    this.selectSort("arrTime");
+                    this.selectSort("depTime");
                     break;
                 case "5":
-                    this.selectSort("trainType");
+                    this.selectSort("arrTime");
                     break;
                 case "6":
-                    this.selectSort("1cost");
+                    this.selectSort("trainType");
                     break;
                 case "7":
-                    this.selectSort("2cost");
+                    this.selectSort("1cost");
                     break;
                 case "8":
+                    this.selectSort("2cost");
+                    break;
+                case "9":
                     this.displayEnd();
                     break;
                 default:
@@ -312,7 +316,7 @@ public class Terminal {
         }
 
         // add trip
-        this.currentTrip = dbTrips.createTrip();
+        this.currentTrip = dbTrips.addTrip();
         Routes firstRoute = this.selectedConnection.getFirstRoute();
         this.currentTrip.setDepartureTime((firstRoute.getDepartureDateTime()));
         System.out.println("New trip created with ID: " + this.currentTrip.getId());
@@ -330,7 +334,7 @@ public class Terminal {
         Client client = dbClients.getClientById(id);
         if (client == null) {
             // create new client
-            client = dbClients.createClient(firstName, lastName, age, id);
+            client = dbClients.addClient(firstName, lastName, age, id);
             System.out.println("New client created with ID: " + client.getId());
         }
 
@@ -344,13 +348,13 @@ public class Terminal {
             }
         }
         // create reservation
-        Reservation reservation = dbReservations.createReservation(client, this.currentTrip);
+        Reservation reservation = dbReservations.addReservation(client, this.selectedConnection);
         System.out.println("New reservation created with ID: " + reservation.getId());
         // add reservation to trip
         this.currentTrip.addReservation(reservation);
         System.out.println("Reservation added to current trip.");
         // create ticket
-        Ticket ticket = dbTickets.createTicket(reservation);
+        Ticket ticket = dbTickets.generateTicket(reservation);
         System.out.println("New ticket created with ID: " + ticket.getId());
         // set ticket for reservation
         dbReservations.setTicketForReservation(reservation, ticket);
@@ -368,7 +372,7 @@ public class Terminal {
         // Implementation for ending a trip booking to add after interaction design
 
         if (this.currentTrip != null) {
-            System.out.println("Trip booking ended for trip ID: " + this.currentTrip.getId());
+            System.out.println("Trip booking ended! Here is the trip information: \n" + this.currentTrip);
             this.currentTrip = null;
         } else {
             System.out.println("No active trip to end.");
@@ -377,20 +381,16 @@ public class Terminal {
 
     public void searchTrips() {
         // Implementation for searching trips to add after interaction design
-        System.out.print("Enter Client ID to search for trips or press \"F\" to enter last name: ");
-        String input = this.input.nextLine();
         Client client = null;
-        if (input.equalsIgnoreCase("F")) {
-            System.out.print("Enter Client Last Name: ");
-            String lastName = this.input.nextLine();
-            client = dbClients.getClientByLastName(lastName);
-        } else {
-            try {
-                int clientID = Integer.parseInt(input);
-                client = dbClients.getClientById(clientID);
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a valid Client ID or 'F' to search by last name.");
-            }
+        try {
+        System.out.print("Enter Client ID : ");
+        int cid = Integer.parseInt(this.input.nextLine());
+        System.out.print("Enter Client's last name to search for trips : ");
+        String lastName = this.input.nextLine();
+        
+        client = dbClients.getClientByIdAndLName(cid, lastName);
+        } catch (Exception e) {
+            System.out.println("Invalid input. Please enter a valid Client ID.");
         }
 
         if (client == null) {
@@ -398,7 +398,7 @@ public class Terminal {
             return;
         }
 
-        HashSet<Trip> trips = dbTrips.getTripsByClient(client);
+        HashSet<Trip> trips = dbClients.getTripsByClient(client);
         if (trips.isEmpty()) {
             System.out.println("No trips found for client ID: " + client.getId());
         } else {
@@ -415,20 +415,15 @@ public class Terminal {
 
     public void viewHistoryCollection() {
         // Implementation for viewing history collection to add after interaction design
-        System.out.print("Enter Client ID to view trip history or 'F' to search by last name: ");
-        String input = this.input.nextLine();
         Client client = null;
-        if (input.equalsIgnoreCase("F")) {
-            System.out.print("Enter Client Last Name: ");
-            String lastName = this.input.nextLine();
-            client = dbClients.getClientByLastName(lastName);
-        } else {
-            try {
-                int clientID = Integer.parseInt(input);
-                client = dbClients.getClientById(clientID);
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a valid Client ID or 'F' to search by last name.");
-            }
+        try {
+        System.out.print("Enter Client ID : ");
+        int cid = Integer.parseInt(this.input.nextLine());
+        System.out.print("Enter Client's last name to search for trips : ");
+        String lastName = this.input.nextLine();
+        client = dbClients.getClientByIdAndLName(cid, lastName);
+        } catch (Exception e) {
+            System.out.println("Invalid input. Please enter a valid Client ID.");
         }
 
         if (client == null) {

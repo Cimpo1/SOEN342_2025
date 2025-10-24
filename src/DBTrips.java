@@ -15,7 +15,7 @@ public class DBTrips {
         this.trips.add(trip);
     }
 
-    public Trip createTrip() {
+    public Trip addTrip() {
         Trip newTrip = new Trip();
         this.trips.add(newTrip);
         return newTrip;
@@ -25,6 +25,7 @@ public class DBTrips {
         this.trips = trips;
     }
 
+    /* 
     public HashSet<Trip> getTripsByClient(Client client) {
         HashSet<Trip> clientTrips = new HashSet<>();
         for (Trip trip : trips) {
@@ -36,7 +37,7 @@ public class DBTrips {
             }
         }
         return clientTrips;
-    }
+    }*/
 
     @Override
     public String toString() {

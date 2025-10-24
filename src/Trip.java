@@ -39,10 +39,14 @@ public class Trip {
 
     @Override
     public String toString() {
-        return "Trip{" +
-                "id='" + id + '\'' +
-                ", reservations=" + reservations +
-                '}';
+        String output = "===================================================\n" + 
+                        "Trip #" + id + "\n" +
+                        "Reservations: \n";
+        for(Reservation r : reservations) {
+            output += r.toString();
+        }
+        output +=       "\n===================================================\n";
+        return output;
     }
 
 }

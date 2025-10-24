@@ -19,9 +19,9 @@ public class DBReservation {
         this.reservations = reservations;
     }
 
-    // create reservation
-    public Reservation createReservation(Client client, Trip trip) {
-        Reservation newReservation = new Reservation(client, trip);
+    // add reservation
+    public Reservation addReservation(Client client, Connection connection) {
+        Reservation newReservation = new Reservation(client, connection);
         this.reservations.add(newReservation);
         return newReservation;
     }

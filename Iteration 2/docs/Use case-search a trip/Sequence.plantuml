@@ -9,10 +9,10 @@ User -> terminal : accessTerminal()
 terminal --> User : confirmation
 loop Search for Trips
     User -> terminal : searchTrips(lastName, id)
-    terminal --> User : currentTrips, historyCollection
+    terminal --> User : trips
 
-    User -> terminal : viewHistoryCollection()
-    terminal --> User : historyCollectionTrips
+    User -> terminal : viewHistoryCollection(lastName, id)
+    terminal --> User : trips
 end
 User -> terminal : end()
 terminal --> User : confirmation

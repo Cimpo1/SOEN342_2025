@@ -19,16 +19,16 @@ public class DBClient {
         this.clients = clients;
     }
 
-    // create client
-    public Client createClient(String firstName, String lastName, int age, int id) {
+    // add client
+    public Client addClient(String firstName, String lastName, int age, int id) {
         Client newClient = new Client(firstName, lastName, age, id);
         this.clients.add(newClient);
         return newClient;
     }
 
-    public Client getClientById(int id) {
+    public Client getClientByIdAndLName(int id, String lname) {
         for (Client client : clients) {
-            if (client.getId() == id) {
+            if (client.getId() == id && client.getLastName().equalsIgnoreCase(lname)) {
                 return client;
             }
         }
@@ -49,14 +49,22 @@ public class DBClient {
         this.find(client).addTrip(trip);
     }
 
-    // get client by last name
-    public Client getClientByLastName(String lastName) {
+    public Client getClientById(int id) {
         for (Client client : clients) {
-            if (client.getLastName().equalsIgnoreCase(lastName)) {
+            if (client.getId() == id) {
                 return client;
             }
         }
         return null;
+    }
+
+    public HashSet<Trip> getTripsByClient(Client client) {
+        Client foundClient = this.getClientById(client.getId());
+        if (foundClient != null) {
+            return foundClient.getTrips();
+        }
+        System.out.println("Client not found.");
+        return new HashSet<>(); // return empty set if client not found
     }
 
     @Override
