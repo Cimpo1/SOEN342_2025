@@ -54,6 +54,8 @@ class "Connection" as connection {
 class "Cities" as cities {
     - name: String
 }
+
+class "PopulateDB" as populateDB {}
 note right of cities
     Because plantuml does not support
     manual layout editing, the diagram
@@ -73,12 +75,15 @@ DBReservation *-- "* " reservation
 DBTicket  *-- "* " ticket
 
 
+
 cities "1..*    " -- "1..*      " cities 
 client "*" -- "*" connection : "takes"
 
 (client, connection) .right. reservation
 
 terminal  -- DBRoutes : "accesses"
+
+terminal -- populateDB : "accesses"
 
 terminal  -- DBCities : "accesses"
 
