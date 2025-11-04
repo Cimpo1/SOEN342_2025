@@ -10,15 +10,23 @@ class "Terminal" as terminal {
     - /results : HashSet<Connection>
     - /currTripID : String
     - /selectedConnectionID : String
+    - input : Scanner
+    - sortToggle : int
     + accessTerminal() : void
     + searchConnections(String departure, String arrival, String day, String depTime, String arrTime, String trainType, String firstRate, String secondRate) : void
     + setResults(HashSet<Connection> results) : void
-    + selectSort() : void
+    + selectSort(String choice) : void
     + displayResults() : void
     + displayMenu() : void
     + displaySortResults() : void
     + displayEnd() : void
     + end() : void
+    + startTripBooking() : void
+    + addReservation(String firstName, String lastName, int age, int id) : void
+    + endTripBooking() : void
+    + searchTrips() : void
+    + viewHistoryCollection() : void
+    + selectConnection() : void
 }
 class "DBRoutes" as DBRoutes {
     - map : HashSet<Routes>
@@ -27,6 +35,8 @@ class "DBRoutes" as DBRoutes {
     + getRoutes() : HashSet<Routes>
     + validateRoutes(Routes r) : boolean
     + getRouteByID(String routeID) : Routes
+    + getRoutesByCityDep(String cityName) : HashSet<Routes>
+    + getRoutesByCityArr(String cityName) : HashSet<Routes>
 }
 
 class "DBConnection" as DBConnection {
@@ -36,7 +46,8 @@ class "DBConnection" as DBConnection {
     + validateConnection(Cities departure, Cities destination) : boolean
     + getAllConnections() : ArrayList<Connection>
     + getDirectConnections(Cities depCity, Cities arrCity, String day, String depTime, String arrTime, String trainType, String firstRate, String secondRate) : HashSet<Connection>
-    + getIndirectConnections(Cities depCity, Cities arrCity, String day, String depTime, String arrTime, String trainType, String firstRate, String secondRate) : HashSet<Connection
+    + getIndirectConnections(Cities depCity, Cities arrCity, String day, String depTime, String arrTime, String trainType, String firstRate, String secondRate) : HashSet<Connection>
+    + getConnectionById(String id) : Connection
 }
 
 class "DBCities" as DBCities {
@@ -49,6 +60,7 @@ class "DBCities" as DBCities {
 
 class "Routes" as routes {
     - routeID : String
+    - tripDuration : Duration
     - departureDateTime : LocalTime
     - arrivalDateTime : LocalTime
     - traintype : String
@@ -89,24 +101,61 @@ class "Cities" as cities {
     - name: String
     +getName() : String
 }
-class "DBClient" as DBClient {}
+class "DBClient" as DBClient {
+    + addClient(Client client) : void
+    + addClient(String firstName, String lastName, int age, int id) : void
+    + getClientByIdAndLName(int id, String lname) : Client
+    - find(Client client) : Client
+    + addTripToClient(Client client, Trip trip) : void
+    +getTripsByClient(Client client) : HashSet<Trip>
+}
 class "Client" as client {
     - id : String
     - firstName : String
     - lastName : String
     - age : Integer
 }
-class "DBTrip" as DBTrip {}
+class "DBTrip" as DBTrip {
+    + getTrips() : HashSet<Trip> 
+    + addTrip(Trip trip) : void
+    + addTrip() : Trip
+}
 class "Trip" as trip {
     - id : String
+    - departureTime : LocalTime
+    + getId() : String
+    + getReservations() : HashSet<Reservation>
+    + addReservation(Reservation reservation) : void
+    + getDepartureTime() : LocalTime
 }
-class "DBReservation" as DBReservation {}
+class "DBReservation" as DBReservation {
+    + getReservations() : HashSet<Reservation>
+    + addReservation(Reservation reservation) : void
+    + addReservation(Client client, Connection connection) : Reservation
+    - find(Reservation reservation) : Reservation
+    + setTicketForReservation(Reservation reservation, Ticket ticket)
+}
 class "Reservation" as reservation {
     - id : String
 }
-class "DBTicket" as DBTicket {}
+class "DBTicket" as DBTicket {
+    + getTickets() : HashSet<Ticket>
+    + getTicketByReservation(Reservation reservation) : Ticket
+    + getTicketById(String id) : Ticket
+    + generateTicket(Reservation reservation) : Ticket
+}
 class "Ticket" as ticket {
     - id : String
+    + getId() : String
+    + getReservation() : Reservation
+}
+
+class "PopulateDB" as populateDB {
+    populateDatabase(String csvFilePath) : void
+    - parseCSVLine(String line) : String[]
+    + getDbCities() : DBCities
+    + getDbConnection() : DBConnection
+    + getDbRoutes() : DBRoutes
 }
 
 connection"*" <-up- DBConnection : "contains"
@@ -116,7 +165,7 @@ DBClient  -down-> "* " client : "contains"
 DBTrip    -down-> "* " trip : "contains"
 DBReservation -down-> "* " reservation : "contains"
 DBTicket  -down-> "* " ticket : "contains"
-
+terminal -- populateDB : "accesses"
 DBConnection  -[hidden]> DBCities: "acces             ses"
 DBCities  -[hidden]> DBRoutes: "acces             ses"
 DBClient -[hidden]> DBConnection: "accesses"

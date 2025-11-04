@@ -9,9 +9,35 @@ skinparam sequenceParticipant underline
 hide empty members
 
 participant ":Terminal" as terminal
+participant ":populateDB" as populateDB
+participant "DBRoutes" as DBroutes
 
 ->terminal:accessTerminal()
+terminal -> populateDB: populateDatabase(fileName)
+create participant "dbc:DBCities" as dbCities
+populateDB -> dbCities: create()
+loop
+populateDB->dbCities:addCity(name)
+create participant "c:Cities" as cities
+dbCities->cities: create()
+cities->dbCities: c
+dbCities->citiesCollection: add(c)
+end
+dbCities->populateDB:dbc
+create participant "dbr:DBRoutes" as dbRoutes
+populateDB -> dbRoutes: create()
+dbRoutes -> populateDB:dbr
+loop
+populateDB -> DBRoutes: addRoute(r)
+create participant "r:Routes" as routes
+DBRoutes -> routes : create()
+routes->dbRoutes : r
+dbRoutes->routesCollection:add(r)
+end
+dbRoutes->populateDB:dbr
+populateDB -> terminal: confirmation
 terminal -> terminal: displayMenu()
+
 
 rnote right
     The terminal displays 

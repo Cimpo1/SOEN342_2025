@@ -1,0 +1,14 @@
+@startuml Sequence Diagram
+skinparam sequenceMessageAlign center
+skinparam noteTextAlignment center
+title "System Sequence Diagram - Use Case : Load csv File"
+participant terminal
+participant populateDB
+participant csvFile
+
+terminal -> populateDB : populateDatabase(csvFile)
+loop
+populateDB -> csvFile : find(nextLine)
+end
+populateDB -> terminal : extracted data
+@enduml
