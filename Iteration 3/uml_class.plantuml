@@ -1,0 +1,82 @@
+@startuml Schema Diagram - Train Reservation System
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 16
+skinparam DefaultFontStyle bold
+skinparam ArrowThickness 2.2
+title Schema Diagram - Train Reservation System
+hide empty members
+
+class "Routes" as routes {
+    - routeID : String <<PK>>
+    - departureDateTime : String
+    - arrivalDateTime : String
+    - traintype : String
+    - firstClassPrice : Integer
+    - secondClassPrice : Integer
+    - departureCity : String <<FK>>
+    - arrivalCity : String <<FK>>
+}
+
+class "route_days" as route_days {
+    - routeID : String <<FK>> <<PK>>
+    - dayOfOperation : String <<PK>>
+}
+
+class "Connection" as connection {
+    - id : String <<PK>>
+    - tripDuration : String
+    - qtyStops : Integer
+    - firstClassPrice : Integer
+    - secondClassPrice : Integer
+    - firstRouteID : String <<FK>>
+    - secondRouteID : String <<FK>>
+    - thirdRouteID : String <<FK>>
+    - departureCity : String <<FK>>
+    - arrivalCity : String <<FK>>
+}
+
+class "connection_days" as connection_days {
+    - connectionID : String <<FK>> <<PK>>
+    - dayOfOperation : String <<PK>>
+}
+
+class "cities_connection" as cities_connection {
+    - connectionID : String <<FK>> <<PK>>
+    - firstCityStop : String <<FK>>
+    - secondCityStop : String <<FK>>
+}
+
+class "Cities" as cities {
+    - name: String <<PK>>
+}
+class "Client" as client {
+    - id : Integer <<PK>>
+    - firstName : String
+    - lastName : String
+    - age : Integer
+}
+class "Trip" as trip {
+    - id : String <<PK>>
+    - departureTime : String
+}
+
+class "Reservation" as reservation {
+    - id : String <<PK>>
+    - clientID : String <<FK>>
+    - tripID : String <<FK>>
+    - ticketID : String <<FK>>
+    - connectionID : String <<FK>>
+}
+class "Ticket" as ticket {
+    - id : String <<PK>>
+    - tripID : String <<FK>>
+    - clientID : String <<FK>>
+    - reservationID : String <<FK>>
+}
+
+class "trip_client" as trip_client {
+    - tripID : String <<FK>> <<PK>>
+    - clientID : String <<FK>> <<PK>>
+}
+
+@enduml
