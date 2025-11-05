@@ -1,7 +1,11 @@
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Scanner;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.time.LocalTime;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class Terminal {
 
@@ -319,6 +323,23 @@ public class Terminal {
         this.currentTrip = dbTrips.addTrip();
         Routes firstRoute = this.selectedConnection.getFirstRoute();
         this.currentTrip.setDepartureTime((firstRoute.getDepartureDateTime()));
+
+        // insert trip into database
+        String url = "jdbc:sqlite:C:\\Users\\Malak\\IdeaProjects\\SOEN342_2025\\Iteration 3\\databaseProject.db";
+
+        String sql = "INSERT INTO Trip(id, departureTime) VALUES(?, ?)";
+
+        try (var conn = DriverManager.getConnection(url);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, this.currentTrip.getId());
+            pstmt.setString(2, this.currentTrip.getDepartureTime().toString());
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
         System.out.println("New trip created with ID: " + this.currentTrip.getId());
 
     }
@@ -331,24 +352,71 @@ public class Terminal {
             return;
         }
         // get client
+        // TO BE REMOVED WHEN DATABASE IS FULLY INTEGRATED
         Client client = dbClients.getClientById(id);
+
+        // search for client through database
+        String url = "jdbc:sqlite:C:\\Users\\Malak\\IdeaProjects\\SOEN342_2025\\Iteration 3\\databaseProject.db";
+        String sql = "SELECT * FROM Client WHERE id = " + id;
+
+        try (var conn = DriverManager.getConnection(url);
+                var stmt = conn.createStatement();
+                var rs = stmt.executeQuery(sql)) {
+
+            int rowCount = 0;
+            if (rs.last()) { // Move cursor to the last row
+                rowCount = rs.getRow(); // Get the current row number (which is the total count)
+                rs.beforeFirst(); // Reset cursor to before the first row for further processing
+            }
+            if (rowCount > 0) {
+                // Client exists, create client object
+                rs.first(); // Move cursor to the first row
+                client = new Client(rs.getString("firstName"), rs.getString("lastName"), rs.getInt("age"),
+                        rs.getInt("id"));
+            }
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
         if (client == null) {
             // create new client
             client = dbClients.addClient(firstName, lastName, age, id);
+
+            // insert client into database
+
+            sql = "INSERT INTO Client(id, firstName, lastName, age) VALUES(?, ?, ?, ?)";
+
+            try (var conn = DriverManager.getConnection(url);
+                    var pstmt = conn.prepareStatement(sql)) {
+
+                pstmt.setInt(1, client.getId());
+                pstmt.setString(2, client.getFirstName());
+                pstmt.setString(3, client.getLastName());
+                pstmt.setInt(4, client.getAge());
+                pstmt.executeUpdate();
+
+            } catch (SQLException e) {
+                System.err.println(e.getMessage());
+            }
+
             System.out.println("New client created with ID: " + client.getId());
         }
 
-        // check if client already has a reservation for this trip
-        if (this.currentTrip.getReservations() != null) {
-            for (Reservation r : this.currentTrip.getReservations()) {
-                if (r.getClient().getId() == client.getId()) {
-                    System.out.println("Client already has a reservation for this trip.");
-                    return;
-                }
-            }
-        }
+        /*
+         * NOT DEMANDED BY REQUIREMENTS
+         * // check if client already has a reservation for this trip
+         * if (this.currentTrip.getReservations() != null) {
+         * for (Reservation r : this.currentTrip.getReservations()) {
+         * if (r.getClient().getId() == client.getId()) {
+         * System.out.println("Client already has a reservation for this trip.");
+         * return;
+         * }
+         * }
+         * }
+         */
         // create reservation
         Reservation reservation = dbReservations.addReservation(client, this.selectedConnection);
+
         System.out.println("New reservation created with ID: " + reservation.getId());
         // add reservation to trip
         this.currentTrip.addReservation(reservation);
@@ -356,6 +424,7 @@ public class Terminal {
         // create ticket
         Ticket ticket = dbTickets.generateTicket(reservation);
         System.out.println("New ticket created with ID: " + ticket.getId());
+
         // set ticket for reservation
         dbReservations.setTicketForReservation(reservation, ticket);
         System.out.println("Ticket assigned to reservation.");
@@ -365,6 +434,52 @@ public class Terminal {
         // display ticket info
         System.out.println("Here is your ticket information:");
         System.out.println(ticket);
+
+        // insert reservation into database
+        sql = "INSERT INTO Reservation(id, clientID, tripID, ticketID, connectionID) VALUES(?, ?, ?, ?)";
+
+        try (var conn = DriverManager.getConnection(url);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, reservation.getId());
+            pstmt.setInt(2, client.getId());
+            pstmt.setString(3, this.currentTrip.getId());
+            pstmt.setString(4, ticket.getId());
+            pstmt.setString(5, this.selectedConnection.getId());
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
+        sql = "INSERT INTO Ticket(id, clientID, tripID, ticketID, connectionID) VALUES(?, ?, ?, ?, ?)";
+
+        try (var conn = DriverManager.getConnection(url);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, ticket.getId());
+            pstmt.setInt(2, client.getId());
+            pstmt.setString(3, this.currentTrip.getId());
+            pstmt.setString(4, ticket.getId());
+            pstmt.setString(5, this.selectedConnection.getId());
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
+        sql = "INSERT INTO trip_client(tripID, clientID) VALUES(?, ?)";
+
+        try (var conn = DriverManager.getConnection(url);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, this.currentTrip.getId());
+            pstmt.setInt(2, client.getId());
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
 
     }
 
@@ -383,21 +498,47 @@ public class Terminal {
         // Implementation for searching trips to add after interaction design
         Client client = null;
         try {
-        System.out.print("Enter Client ID : ");
-        int cid = Integer.parseInt(this.input.nextLine());
-        System.out.print("Enter Client's last name to search for trips : ");
-        String lastName = this.input.nextLine();
-        
-        client = dbClients.getClientByIdAndLName(cid, lastName);
+            System.out.print("Enter Client ID : ");
+            int cid = Integer.parseInt(this.input.nextLine());
+            System.out.print("Enter Client's last name to search for trips : ");
+            String lastName = this.input.nextLine();
+
+            // TO BE REMOVED WHEN DATABASE IS FULLY INTEGRATED
+            client = dbClients.getClientByIdAndLName(cid, lastName);
+
+            // search for client through database
+
+            String url = "jdbc:sqlite:C:\\Users\\Malak\\IdeaProjects\\SOEN342_2025\\Iteration 3\\databaseProject.db";
+            String sql = "SELECT * FROM Client WHERE id = " + cid + " AND lastName = '" + lastName + "'";
+
+            var conn = DriverManager.getConnection(url);
+            var stmt = conn.createStatement();
+            var rs = stmt.executeQuery(sql);
+
+            int rowCount = 0;
+            if (rs.last()) { // Move cursor to the last row
+                rowCount = rs.getRow(); // Get the current row number (which is the total count)
+                rs.beforeFirst(); // Reset cursor to before the first row for further processing
+            }
+            if (rowCount > 0) {
+                // Client exists, create client object
+                rs.first(); // Move cursor to the first row
+                client = new Client(rs.getString("firstName"), rs.getString("lastName"), rs.getInt("age"),
+                        rs.getInt("id"));
+
+                // get trip info for client
+                sql = "SELECT * FROM Reservation WHERE clientID = " + client.getId() + " ORDER BY tripID ASC";
+
+            }
+            if (client == null || rowCount == 0) {
+                System.out.println("Invalid client.");
+                return;
+            }
         } catch (Exception e) {
             System.out.println("Invalid input. Please enter a valid Client ID.");
         }
 
-        if (client == null) {
-            System.out.println("Invalid client.");
-            return;
-        }
-
+        // TO BE REMOVED WHEN DATABASE IS FULLY INTEGRATED
         HashSet<Trip> trips = dbClients.getTripsByClient(client);
         if (trips.isEmpty()) {
             System.out.println("No trips found for client ID: " + client.getId());
@@ -417,11 +558,11 @@ public class Terminal {
         // Implementation for viewing history collection to add after interaction design
         Client client = null;
         try {
-        System.out.print("Enter Client ID : ");
-        int cid = Integer.parseInt(this.input.nextLine());
-        System.out.print("Enter Client's last name to search for trips : ");
-        String lastName = this.input.nextLine();
-        client = dbClients.getClientByIdAndLName(cid, lastName);
+            System.out.print("Enter Client ID : ");
+            int cid = Integer.parseInt(this.input.nextLine());
+            System.out.print("Enter Client's last name to search for trips : ");
+            String lastName = this.input.nextLine();
+            client = dbClients.getClientByIdAndLName(cid, lastName);
         } catch (Exception e) {
             System.out.println("Invalid input. Please enter a valid Client ID.");
         }

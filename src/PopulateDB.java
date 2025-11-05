@@ -295,11 +295,18 @@ public class PopulateDB {
         this.dbConnection = dbConnection;
         this.dbRoutes = dbRoutes;
 
+        // Now, insert the data into the SQLite database
+
+        /*IN ORDER
+         * Cities
+         * Routes
+         * routes_days
+         * Connection
+         * connection_days
+        */
+
         //the url format is jdbc:sqlite:<Absolute path to db> so it depends on whos running the system
         String url = "jdbc:sqlite:C:\\Users\\Malak\\IdeaProjects\\SOEN342_2025\\Iteration 3\\databaseProject.db";
-
-        var names = new String[] {"Raw Materials", "Semifinished Goods", "Finished Goods"};
-        var capacities = new int[] {3000,4000,5000};
 
         String sql = "INSERT INTO Cities(name) VALUES(?)";
 
@@ -307,13 +314,112 @@ public class PopulateDB {
              var pstmt = conn.prepareStatement(sql)) {
 
             for(String c: dbCities.getAllCityNames()){
-                pstmt.setString(c);
+                pstmt.setString(1,c);
                 pstmt.executeUpdate();
             }
 
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
+
+        sql = "INSERT INTO Routes(routeID, departureDateTime, arrivalDateTime, traintype, firstClassPrice, secondClassPrice, departureCity, arrivalCity) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (var conn = DriverManager.getConnection(url);
+             var pstmt = conn.prepareStatement(sql)) {
+
+            for(Routes r: dbRoutes.getRoutes()){
+                pstmt.setString(1,r.getRouteID());
+                pstmt.setString(2,r.getDepartureDateTime().toString());
+                pstmt.setString(3,r.getArrivalDateTime().toString());
+                pstmt.setString(4,r.getTraintype());
+                pstmt.setInt(5,r.getFirstClassPrice());
+                pstmt.setInt(6,r.getSecondClassPrice());
+                pstmt.setString(7,r.getDepartureCity().getName());
+                pstmt.setString(8,r.getArrivalCity().getName());
+                pstmt.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
+        sql = "INSERT INTO route_days(routeID, dayOfOperation) VALUES(?, ?)";
+
+        try (var conn = DriverManager.getConnection(url);
+             var pstmt = conn.prepareStatement(sql)) {
+
+            for(Routes route : dbRoutes.getRoutes()){
+                for(String day: route.getDaysofoperation()){
+                    pstmt.setString(1, route.getRouteID());
+                    pstmt.setString(2, day);
+                    pstmt.executeUpdate();
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
+        sql = "INSERT INTO Connection(id, tripDuration, qtyStops, firstClassPrice, secondClassPrice, firstRouteID, secondRouteID, thirdRouteID, departureCity, arrivalCity, firstStop, secondStop) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (var conn = DriverManager.getConnection(url);
+             var pstmt = conn.prepareStatement(sql)) {
+
+            for(Connection connection: dbConnection.getAllConnections()){
+                pstmt.setString(1, connection.getId());
+                pstmt.setString(2, connection.getTripDuration().toString());
+                pstmt.setInt(3, connection.getQtyStops());
+                pstmt.setInt(4, connection.getFirstClassPrice());
+                pstmt.setInt(5, connection.getSecondClassPrice());
+                pstmt.setString(6, connection.getRoutes().get(0).getRouteID());
+
+                // check if there are stops to set the route IDs and stop city names
+
+                // 1 stop -> 2 routes & 1 stop city
+                // 2 stops -> 3 routes & 2 stop cities
+                // 0 stops -> 1 route & no stop city
+                if(connection.getQtyStops()==1){
+                    pstmt.setString(7, connection.getRoutes().get(1).getRouteID());
+                    pstmt.setString(8, null);
+                    pstmt.setString(11, connection.getStopCities().get(0).getName());
+                    pstmt.setString(12, null);
+                } else if(connection.getQtyStops()==2){
+                    pstmt.setString(7, connection.getRoutes().get(1).getRouteID());
+                    pstmt.setString(8, connection.getRoutes().get(2).getRouteID());
+                    pstmt.setString(11, connection.getStopCities().get(0).getName());
+                    pstmt.setString(12, connection.getStopCities().get(1).getName());
+                } else {
+                    pstmt.setString(7, null);
+                    pstmt.setString(8, null);
+                    pstmt.setString(11, null);
+                    pstmt.setString(12, null);
+                }
+                pstmt.setString(9, connection.getDepartureCity().getName());
+                pstmt.setString(10, connection.getArrivalCity().getName());
+                pstmt.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
+        sql = "INSERT INTO connection_days(connectionID, dayOfOperation) VALUES(?, ?)";
+
+        try (var conn = DriverManager.getConnection(url);
+             var pstmt = conn.prepareStatement(sql)) {
+
+            for(Connection connection: dbConnection.getAllConnections()){
+                for(String day: connection.getDaysOfOperation()){
+                    pstmt.setString(1, connection.getId());
+                    pstmt.setString(2, day);
+                    pstmt.executeUpdate();
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
     }
 
     /**
