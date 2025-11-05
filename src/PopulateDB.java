@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.HashSet;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class PopulateDB {
     private DBCities dbCities;
@@ -292,6 +294,26 @@ public class PopulateDB {
         this.dbCities = dbCities;
         this.dbConnection = dbConnection;
         this.dbRoutes = dbRoutes;
+
+        //the url format is jdbc:sqlite:<Absolute path to db> so it depends on whos running the system
+        String url = "jdbc:sqlite:C:\\Users\\Malak\\IdeaProjects\\SOEN342_2025\\Iteration 3\\databaseProject.db";
+
+        var names = new String[] {"Raw Materials", "Semifinished Goods", "Finished Goods"};
+        var capacities = new int[] {3000,4000,5000};
+
+        String sql = "INSERT INTO Cities(name) VALUES(?)";
+
+        try (var conn = DriverManager.getConnection(url);
+             var pstmt = conn.prepareStatement(sql)) {
+
+            for(String c: dbCities.getAllCityNames()){
+                pstmt.setString(c);
+                pstmt.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
     }
 
     /**
