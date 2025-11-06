@@ -1,9 +1,15 @@
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Scanner;
-import java.time.LocalTime;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class Terminal {
+
+    // Database URL constant using current working directory
+    private static final String DB_PATH = System.getProperty("user.dir") + System.getProperty("file.separator")
+            + "Iteration 3" + System.getProperty("file.separator") + "databaseProject.db";
+    private static final String DB_URL = "jdbc:sqlite:" + DB_PATH;
 
     // private attributes
     private Scanner input = new Scanner(System.in);
@@ -54,16 +60,37 @@ public class Terminal {
     }
 
     public void accessTerminal() {
-        // Populate the databases
+        // Ask user if they want to populate the database
+        System.out.println("\n============================================================");
+        System.out.println("\t       Welcome to the Travel Terminal!");
+        System.out.println("============================================================\n");
+        System.out.println("Would you like to populate the database from CSV? (y/n): ");
+        String populateChoice = input.nextLine().trim().toLowerCase();
+
+        // Always create PopulateDB and get the objects
         PopulateDB L = new PopulateDB();
-        L.populateDatabase("docs/eu_rail_network.csv");
+
+        // Only populate from CSV if user chooses 'y'
+        if (populateChoice.equals("y") || populateChoice.equals("yes")) {
+            System.out.println("Populating database...");
+            L.populateDatabase("docs/eu_rail_network.csv");
+        } else {
+            System.out.println("Loading data from database...");
+            L.loadFromDatabase();
+        }
+
+        // Always get the database objects (populated or loaded from database)
         this.dbConnection = L.getDbConnection();
         this.dbCities = L.getDbCities();
         this.dbRoutes = L.getDbRoutes();
+
         this.dbTrips = new DBTrips();
         this.dbReservations = new DBReservation();
         this.dbTickets = new DBTicket();
         this.dbClients = new DBClient();
+
+        // Load existing clients from database
+        this.loadClientsFromDatabase();
 
         System.out.println("\n============================================================\n" +
                 "\t       Welcome to the Travel Terminal!\n" +
@@ -253,8 +280,10 @@ public class Terminal {
     }
 
     public void displayEnd() {
+        System.out.println("Saving clients to database...");
+        this.saveClientsToDatabase();
         System.out.println("Thank you for using the Travel Terminal. Goodbye!");
-        System.exit(1);
+        System.exit(0);
     }
 
     public void searchConnections(String departure, String arrival, String day, String depTime, String arrTime,
@@ -266,6 +295,7 @@ public class Terminal {
         Cities arrCity = dbCities.getCityByName(arrival);
         if (depCity == null || arrCity == null) {
             System.out.println("One or both of the specified cities do not exist in the database.");
+            System.out.println("Available cities: " + java.util.Arrays.toString(dbCities.getAllCityNames()));
             return;
         }
         // NOTE: THE DAY INPUT SHOULD BE GIVEN IN THE FORMAT "DAY,DAY,..." (e.g.,
@@ -319,6 +349,21 @@ public class Terminal {
         this.currentTrip = dbTrips.addTrip();
         Routes firstRoute = this.selectedConnection.getFirstRoute();
         this.currentTrip.setDepartureTime((firstRoute.getDepartureDateTime()));
+
+        // insert trip into database
+        String sql = "INSERT INTO Trip(id, departureTime) VALUES(?, ?)";
+
+        try (var conn = DriverManager.getConnection(DB_URL);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, this.currentTrip.getId());
+            pstmt.setString(2, this.currentTrip.getDepartureTime().toString());
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
         System.out.println("New trip created with ID: " + this.currentTrip.getId());
 
     }
@@ -331,24 +376,74 @@ public class Terminal {
             return;
         }
         // get client
+        // TO BE REMOVED WHEN DATABASE IS FULLY INTEGRATED
         Client client = dbClients.getClientById(id);
+
+        // search for client through database
+        String sql = "SELECT * FROM Client WHERE id = " + id;
+
+        try (var conn = DriverManager.getConnection(DB_URL);
+                var stmt = conn.createStatement();
+                var rs = stmt.executeQuery(sql)) {
+
+            int rowCount = 0;
+            if (rs.last()) { // Move cursor to the last row
+                rowCount = rs.getRow(); // Get the current row number (which is the total count)
+                rs.beforeFirst(); // Reset cursor to before the first row for further processing
+            }
+            if (rowCount > 0) {
+                // Client exists, create client object
+                rs.first(); // Move cursor to the first row
+                client = new Client(rs.getString("firstName"), rs.getString("lastName"), rs.getInt("age"),
+                        rs.getInt("id"));
+            }
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
         if (client == null) {
             // create new client
             client = dbClients.addClient(firstName, lastName, age, id);
-            System.out.println("New client created with ID: " + client.getId());
-        }
 
-        // check if client already has a reservation for this trip
-        if (this.currentTrip.getReservations() != null) {
-            for (Reservation r : this.currentTrip.getReservations()) {
-                if (r.getClient().getId() == client.getId()) {
-                    System.out.println("Client already has a reservation for this trip.");
-                    return;
+            // insert client into database
+
+            sql = "INSERT INTO Client(id, firstName, lastName, age) VALUES(?, ?, ?, ?)";
+
+            try (var conn = DriverManager.getConnection(DB_URL);
+                    var pstmt = conn.prepareStatement(sql)) {
+
+                pstmt.setInt(1, client.getId());
+                pstmt.setString(2, client.getFirstName());
+                pstmt.setString(3, client.getLastName());
+                pstmt.setInt(4, client.getAge());
+                pstmt.executeUpdate();
+                System.out.println("New client created with ID: " + client.getId());
+
+            } catch (SQLException e) {
+                if (e.getMessage().contains("UNIQUE constraint failed")) {
+                    System.out.println("\u001B[31mError: Client ID " + id
+                            + " already exists. Please use a different ID.\u001B[0m");
+                } else {
+                    System.out.println("\u001B[31mDatabase Error: " + e.getMessage() + "\u001B[0m");
                 }
             }
         }
+
+        /*
+         * NOT DEMANDED BY REQUIREMENTS
+         * // check if client already has a reservation for this trip
+         * if (this.currentTrip.getReservations() != null) {
+         * for (Reservation r : this.currentTrip.getReservations()) {
+         * if (r.getClient().getId() == client.getId()) {
+         * System.out.println("Client already has a reservation for this trip.");
+         * return;
+         * }
+         * }
+         * }
+         */
         // create reservation
         Reservation reservation = dbReservations.addReservation(client, this.selectedConnection);
+
         System.out.println("New reservation created with ID: " + reservation.getId());
         // add reservation to trip
         this.currentTrip.addReservation(reservation);
@@ -356,6 +451,7 @@ public class Terminal {
         // create ticket
         Ticket ticket = dbTickets.generateTicket(reservation);
         System.out.println("New ticket created with ID: " + ticket.getId());
+
         // set ticket for reservation
         dbReservations.setTicketForReservation(reservation, ticket);
         System.out.println("Ticket assigned to reservation.");
@@ -365,6 +461,51 @@ public class Terminal {
         // display ticket info
         System.out.println("Here is your ticket information:");
         System.out.println(ticket);
+
+        // insert reservation into database
+        sql = "INSERT INTO Reservation(id, clientID, tripID, ticketID, connectionID) VALUES(?, ?, ?, ?, ?)";
+
+        try (var conn = DriverManager.getConnection(DB_URL);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, reservation.getId());
+            pstmt.setInt(2, client.getId());
+            pstmt.setString(3, this.currentTrip.getId());
+            pstmt.setString(4, ticket.getId());
+            pstmt.setString(5, this.selectedConnection.getId());
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
+        sql = "INSERT INTO Ticket(id, clientID, tripID, connectionID) VALUES(?, ?, ?, ?)";
+
+        try (var conn = DriverManager.getConnection(DB_URL);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, ticket.getId());
+            pstmt.setInt(2, client.getId());
+            pstmt.setString(3, this.currentTrip.getId());
+            pstmt.setString(4, this.selectedConnection.getId());
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
+        sql = "INSERT INTO trip_client(tripID, clientID) VALUES(?, ?)";
+
+        try (var conn = DriverManager.getConnection(DB_URL);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, this.currentTrip.getId());
+            pstmt.setInt(2, client.getId());
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
 
     }
 
@@ -383,33 +524,103 @@ public class Terminal {
         // Implementation for searching trips to add after interaction design
         Client client = null;
         try {
-        System.out.print("Enter Client ID : ");
-        int cid = Integer.parseInt(this.input.nextLine());
-        System.out.print("Enter Client's last name to search for trips : ");
-        String lastName = this.input.nextLine();
-        
-        client = dbClients.getClientByIdAndLName(cid, lastName);
+            System.out.print("Enter Client ID : ");
+            int cid = Integer.parseInt(this.input.nextLine());
+            System.out.print("Enter Client's last name to search for trips : ");
+            String lastName = this.input.nextLine();
+
+            // First, check in-memory clients (for recently created clients)
+            client = dbClients.getClientByIdAndLName(cid, lastName);
+
+            // If not found in memory, search database
+            if (client == null) {
+                String sql = "SELECT * FROM Client WHERE id = " + cid + " AND lastName = '" + lastName + "'";
+
+                try (var conn = DriverManager.getConnection(DB_URL);
+                        var stmt = conn.createStatement();
+                        var rs = stmt.executeQuery(sql)) {
+
+                    int rowCount = 0;
+                    if (rs.last()) { // Move cursor to the last row
+                        rowCount = rs.getRow(); // Get the current row number (which is the total count)
+                        rs.beforeFirst(); // Reset cursor to before the first row for further processing
+                    }
+                    if (rowCount > 0) {
+                        // Client exists in database, create client object
+                        rs.first(); // Move cursor to the first row
+                        client = new Client(rs.getString("firstName"), rs.getString("lastName"), rs.getInt("age"),
+                                rs.getInt("id"));
+                        // Also add to in-memory dbClients for future lookups
+                        dbClients.addClient(client);
+                    }
+                }
+            }
+
+            if (client == null) {
+                System.out.println("Invalid client.");
+                return;
+            }
         } catch (Exception e) {
             System.out.println("Invalid input. Please enter a valid Client ID.");
+            client = null;
         }
 
+        // Check if client was found
         if (client == null) {
-            System.out.println("Invalid client.");
+            System.out.println("Client not found in database or memory.");
             return;
         }
 
-        HashSet<Trip> trips = dbClients.getTripsByClient(client);
-        if (trips.isEmpty()) {
-            System.out.println("No trips found for client ID: " + client.getId());
-        } else {
-            System.out.println("Trips found for client ID: " + client.getId());
-            for (Trip trip : trips) {
-                // display only if trip is for today or future
-                if (trip.getDepartureTime().isAfter(LocalTime.now())
-                        || trip.getDepartureTime().equals(LocalTime.now())) {
-                    System.out.println(trip);
+        // Query the database for reservations with this client
+        System.out.println("\n============================================================");
+        System.out.println("Upcoming Trips for Client: " + client.getFirstName() + " " + client.getLastName());
+        System.out.println("============================================================\n");
+
+        String sql = "SELECT r.id as reservationID, r.connectionID FROM Reservation r " +
+                "WHERE r.clientID = ?";
+
+        try (var conn = DriverManager.getConnection(DB_URL);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, client.getId());
+            var rs = pstmt.executeQuery();
+
+            int tripCount = 0;
+            while (rs.next()) {
+                String reservationID = rs.getString("reservationID");
+                String connectionID = rs.getString("connectionID");
+
+                // Get connection details
+                String connSql = "SELECT departureCity, arrivalCity, qtyStops, firstClassPrice, secondClassPrice FROM Connection WHERE id = ?";
+                try (var connStmt = conn.prepareStatement(connSql)) {
+                    connStmt.setString(1, connectionID);
+                    var connRs = connStmt.executeQuery();
+
+                    if (connRs.next()) {
+                        String depCity = connRs.getString("departureCity");
+                        String arrCity = connRs.getString("arrivalCity");
+                        int stops = connRs.getInt("qtyStops");
+                        int firstPrice = connRs.getInt("firstClassPrice");
+                        int secondPrice = connRs.getInt("secondClassPrice");
+
+                        System.out.println("Reservation #" + (tripCount + 1));
+                        System.out.println("  Route: " + depCity + " -> " + arrCity);
+                        System.out.println("  Stops: " + stops);
+                        System.out.println("  First Class Price: $" + firstPrice);
+                        System.out.println("  Second Class Price: $" + secondPrice);
+                        System.out.println("  Reservation ID: " + reservationID);
+                        System.out.println();
+                    }
                 }
+
+                tripCount++;
             }
+
+            if (tripCount == 0) {
+                System.out.println("No trips found for client ID: " + client.getId());
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving trips from database: " + e.getMessage());
         }
     }
 
@@ -417,11 +628,31 @@ public class Terminal {
         // Implementation for viewing history collection to add after interaction design
         Client client = null;
         try {
-        System.out.print("Enter Client ID : ");
-        int cid = Integer.parseInt(this.input.nextLine());
-        System.out.print("Enter Client's last name to search for trips : ");
-        String lastName = this.input.nextLine();
-        client = dbClients.getClientByIdAndLName(cid, lastName);
+            System.out.print("Enter Client ID : ");
+            int cid = Integer.parseInt(this.input.nextLine());
+            System.out.print("Enter Client's last name to search for trips : ");
+            String lastName = this.input.nextLine();
+
+            // First, check in-memory clients
+            client = dbClients.getClientByIdAndLName(cid, lastName);
+
+            // If not found in memory, search database
+            if (client == null) {
+                String sql = "SELECT * FROM Client WHERE id = ? AND lastName = ?";
+                try (var conn = DriverManager.getConnection(DB_URL);
+                        var pstmt = conn.prepareStatement(sql)) {
+
+                    pstmt.setInt(1, cid);
+                    pstmt.setString(2, lastName);
+                    var rs = pstmt.executeQuery();
+
+                    if (rs.next()) {
+                        client = new Client(rs.getString("firstName"), rs.getString("lastName"),
+                                rs.getInt("age"), rs.getInt("id"));
+                        dbClients.addClient(client);
+                    }
+                }
+            }
         } catch (Exception e) {
             System.out.println("Invalid input. Please enter a valid Client ID.");
         }
@@ -430,15 +661,65 @@ public class Terminal {
             System.out.println("Invalid client.");
             return;
         }
-        System.out.println("Trip history for client ID: " + client.getId());
-        for (Trip trip : client.getTrips()) {
-            // print only past trips
-            if (trip.getDepartureTime().isBefore(LocalTime.now())) {
-                System.out.println(trip);
-            }
-        }
-        System.out.println("End of trip history.");
 
+        System.out.println("\n============================================================");
+        System.out.println("Trip History for Client: " + client.getFirstName() + " " + client.getLastName());
+        System.out.println("============================================================\n");
+
+        // Query the database for past reservations only (where departure time is before
+        // now)
+        String sql = "SELECT r.id as reservationID, r.connectionID, t.departureTime FROM Reservation r " +
+                "JOIN Trip t ON r.tripID = t.id " +
+                "WHERE r.clientID = ? AND time(t.departureTime) < time('now') " +
+                "ORDER BY t.departureTime DESC";
+
+        try (var conn = DriverManager.getConnection(DB_URL);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, client.getId());
+            var rs = pstmt.executeQuery();
+
+            int tripCount = 0;
+            while (rs.next()) {
+                String reservationID = rs.getString("reservationID");
+                String connectionID = rs.getString("connectionID");
+                String departureTime = rs.getString("departureTime");
+
+                // Get connection details
+                String connSql = "SELECT departureCity, arrivalCity, qtyStops, firstClassPrice, secondClassPrice FROM Connection WHERE id = ?";
+                try (var connStmt = conn.prepareStatement(connSql)) {
+                    connStmt.setString(1, connectionID);
+                    var connRs = connStmt.executeQuery();
+
+                    if (connRs.next()) {
+                        String depCity = connRs.getString("departureCity");
+                        String arrCity = connRs.getString("arrivalCity");
+                        int stops = connRs.getInt("qtyStops");
+                        int firstPrice = connRs.getInt("firstClassPrice");
+                        int secondPrice = connRs.getInt("secondClassPrice");
+
+                        System.out.println("Reservation #" + (tripCount + 1));
+                        System.out.println("  Route: " + depCity + " -> " + arrCity);
+                        System.out.println("  Stops: " + stops);
+                        System.out.println("  First Class Price: $" + firstPrice);
+                        System.out.println("  Second Class Price: $" + secondPrice);
+                        System.out.println("  Departure Time: " + departureTime);
+                        System.out.println("  Reservation ID: " + reservationID);
+                        System.out.println();
+                    }
+                }
+
+                tripCount++;
+            }
+
+            if (tripCount == 0) {
+                System.out.println("No past trips found for client ID: " + client.getId());
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving trip history from database: " + e.getMessage());
+        }
+
+        System.out.println("End of trip history.");
     }
 
     public void selectConnection() {
@@ -456,6 +737,67 @@ public class Terminal {
             System.out.println("Connection ID not found. Please try again.");
         }
 
+    }
+
+    /**
+     * Load all clients from the database into the dbClients object
+     */
+    private void loadClientsFromDatabase() {
+        String sql = "SELECT * FROM Client";
+        try (var conn = DriverManager.getConnection(DB_URL);
+                var stmt = conn.createStatement();
+                var rs = stmt.executeQuery(sql)) {
+            int clientCount = 0;
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String firstName = rs.getString("firstName");
+                String lastName = rs.getString("lastName");
+                int age = rs.getInt("age");
+
+                Client client = new Client(firstName, lastName, age, id);
+                dbClients.addClient(client);
+                clientCount++;
+            }
+            if (clientCount > 0) {
+                System.out.println("\u001B[32mLoaded " + clientCount + " existing clients from database.\u001B[0m");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error loading clients from database: " + e.getMessage());
+        }
+    }
+
+    private void saveClientsToDatabase() {
+        // Get all clients from in-memory storage
+        HashSet<Client> allClients = dbClients.getClients();
+
+        if (allClients.isEmpty()) {
+            System.out.println("No clients to save.");
+            return;
+        }
+
+        // Insert or update clients in the database
+        String sql = "INSERT OR REPLACE INTO Client(id, firstName, lastName, age) VALUES(?, ?, ?, ?)";
+
+        try (var conn = DriverManager.getConnection(DB_URL);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            int clientsSaved = 0;
+            for (Client client : allClients) {
+                pstmt.setInt(1, client.getId());
+                pstmt.setString(2, client.getFirstName());
+                pstmt.setString(3, client.getLastName());
+                pstmt.setInt(4, client.getAge());
+                pstmt.executeUpdate();
+                clientsSaved++;
+            }
+
+            if (clientsSaved > 0) {
+                System.out.println("\u001B[32mSuccessfully saved " + clientsSaved + " clients to database.\u001B[0m");
+            }
+        } catch (SQLException e) {
+            System.err.println("\u001B[31mError saving clients to database: " + e.getMessage() + "\u001B[0m");
+            e.printStackTrace();
+        }
     }
 
 }

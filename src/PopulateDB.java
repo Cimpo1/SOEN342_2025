@@ -7,11 +7,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.HashSet;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class PopulateDB {
     private DBCities dbCities;
     private DBConnection dbConnection;
     private DBRoutes dbRoutes;
+    private String dbUrl;
+
+    // Default database path using current working directory
+    private static final String DEFAULT_DB_PATH = System.getProperty("user.dir") + System.getProperty("file.separator")
+            + "Iteration 3" + System.getProperty("file.separator") + "databaseProject.db";
+    private static final String DEFAULT_DB_URL = "jdbc:sqlite:" + DEFAULT_DB_PATH;
 
     // COLORS
     public static final String ANSI_RESET = "\u001B[0m";
@@ -23,6 +31,189 @@ public class PopulateDB {
     public static final String ANSI_PURPLE = "\u001B[35m";
     public static final String ANSI_CYAN = "\u001B[36m";
     public static final String ANSI_WHITE = "\u001B[37m";
+
+    // Constructor that accepts database URL
+    public PopulateDB(String dbUrl) {
+        this.dbUrl = dbUrl;
+        this.dbCities = new DBCities();
+        this.dbConnection = new DBConnection();
+        this.dbRoutes = new DBRoutes();
+        System.out.println(ANSI_CYAN + "Custom database path: " + dbUrl + ANSI_RESET);
+    }
+
+    // Default constructor (uses default database path)
+    public PopulateDB() {
+        this.dbUrl = DEFAULT_DB_URL;
+        this.dbCities = new DBCities();
+        this.dbConnection = new DBConnection();
+        this.dbRoutes = new DBRoutes();
+        System.out.println(ANSI_BLUE + "Database path: " + DEFAULT_DB_PATH + ANSI_RESET);
+    }
+
+    // Setter to configure database URL
+    public void setDbUrl(String dbUrl) {
+        this.dbUrl = dbUrl;
+    }
+
+    // Load data from the SQLite database into memory objects
+    public void loadFromDatabase() {
+        System.out.println(ANSI_CYAN + "Loading data from database..." + ANSI_RESET);
+
+        DBCities dbCities = new DBCities();
+        DBConnection dbConnection = new DBConnection();
+        DBRoutes dbRoutes = new DBRoutes();
+
+        // Keep a map of city names to Cities objects for consistency
+        Map<String, Cities> cityPool = new HashMap<>();
+
+        try (var conn = DriverManager.getConnection(dbUrl)) {
+            // Load all cities from the Cities table
+            String citiesSql = "SELECT name FROM Cities ORDER BY name";
+            try (var stmt = conn.createStatement();
+                    var rs = stmt.executeQuery(citiesSql)) {
+                while (rs.next()) {
+                    String cityName = rs.getString("name");
+                    Cities city = new Cities(cityName);
+                    cityPool.put(cityName, city);
+                    dbCities.addCity(city);
+                }
+            }
+
+            System.out.println(ANSI_GREEN + "Loaded " + cityPool.size() + " cities from database" + ANSI_RESET);
+
+            // Load all routes from the Routes table
+            String routesSql = "SELECT routeID, departureDateTime, arrivalDateTime, traintype, " +
+                    "firstClassPrice, secondClassPrice, departureCity, arrivalCity FROM Routes";
+            try (var stmt = conn.createStatement();
+                    var rs = stmt.executeQuery(routesSql)) {
+                while (rs.next()) {
+                    String routeID = rs.getString("routeID");
+                    String depTimeStr = rs.getString("departureDateTime");
+                    String arrTimeStr = rs.getString("arrivalDateTime");
+                    String trainType = rs.getString("traintype");
+                    int firstPrice = rs.getInt("firstClassPrice");
+                    int secondPrice = rs.getInt("secondClassPrice");
+                    String depCityName = rs.getString("departureCity");
+                    String arrCityName = rs.getString("arrivalCity");
+
+                    Cities depCity = cityPool.get(depCityName.toLowerCase());
+                    Cities arrCity = cityPool.get(arrCityName.toLowerCase());
+
+                    if (depCity != null && arrCity != null) {
+                        try {
+                            LocalTime depTime = LocalTime.parse(depTimeStr);
+                            LocalTime arrTime = LocalTime.parse(arrTimeStr);
+                            Duration duration = Duration.between(depTime, arrTime);
+                            if (duration.isNegative()) {
+                                duration = duration.plusDays(1);
+                            }
+
+                            Routes route = new Routes(routeID, depCity, arrCity, duration,
+                                    depTime, arrTime, trainType, "Daily", firstPrice, secondPrice);
+                            dbRoutes.addRoutes(route);
+                        } catch (Exception e) {
+                            System.err.println("Error loading route " + routeID + ": " + e.getMessage());
+                        }
+                    }
+                }
+            }
+
+            System.out.println(
+                    ANSI_GREEN + "Loaded " + dbRoutes.getRoutes().size() + " routes from database" + ANSI_RESET);
+
+            // Load all connections from the Connection table
+            String connectionsSql = "SELECT id, tripDuration, qtyStops, " +
+                    "firstRouteID, secondRouteID, thirdRouteID, departureCity, arrivalCity, firstStop, secondStop FROM Connection";
+            try (var stmt = conn.createStatement();
+                    var rs = stmt.executeQuery(connectionsSql)) {
+                while (rs.next()) {
+                    String connId = rs.getString("id");
+                    String durationStr = rs.getString("tripDuration");
+                    int qtyStops = rs.getInt("qtyStops");
+                    String firstRouteID = rs.getString("firstRouteID");
+                    String secondRouteID = rs.getString("secondRouteID");
+                    String thirdRouteID = rs.getString("thirdRouteID");
+                    String depCityName = rs.getString("departureCity");
+                    String arrCityName = rs.getString("arrivalCity");
+                    String firstStopName = rs.getString("firstStop");
+                    String secondStopName = rs.getString("secondStop");
+
+                    try {
+                        Duration tripDuration = Duration.parse(durationStr);
+                        Cities depCity = cityPool.get(depCityName.toLowerCase());
+                        Cities arrCity = cityPool.get(arrCityName.toLowerCase());
+
+                        if (depCity != null && arrCity != null) {
+                            ArrayList<Routes> routeList = new ArrayList<>();
+                            Routes route1 = dbRoutes.getRouteByID(firstRouteID);
+                            if (route1 != null)
+                                routeList.add(route1);
+
+                            if (secondRouteID != null) {
+                                Routes route2 = dbRoutes.getRouteByID(secondRouteID);
+                                if (route2 != null)
+                                    routeList.add(route2);
+                            }
+
+                            if (thirdRouteID != null) {
+                                Routes route3 = dbRoutes.getRouteByID(thirdRouteID);
+                                if (route3 != null)
+                                    routeList.add(route3);
+                            }
+
+                            // Load stop cities if they exist
+                            ArrayList<Cities> stopCities = new ArrayList<>();
+                            if (firstStopName != null && !firstStopName.isEmpty()) {
+                                Cities stopCity = cityPool.get(firstStopName.toLowerCase());
+                                if (stopCity != null)
+                                    stopCities.add(stopCity);
+                            }
+                            if (secondStopName != null && !secondStopName.isEmpty()) {
+                                Cities stopCity = cityPool.get(secondStopName.toLowerCase());
+                                if (stopCity != null)
+                                    stopCities.add(stopCity);
+                            }
+
+                            // Load days of operation for this connection
+                            ArrayList<String> daysList = new ArrayList<>();
+                            String daysSql = "SELECT dayOfOperation FROM connection_days WHERE connectionID = ?";
+                            try (var dayStmt = conn.prepareStatement(daysSql)) {
+                                dayStmt.setString(1, connId);
+                                try (var daysRs = dayStmt.executeQuery()) {
+                                    while (daysRs.next()) {
+                                        daysList.add(daysRs.getString("dayOfOperation"));
+                                    }
+                                }
+                            }
+
+                            if (daysList.isEmpty()) {
+                                daysList.add("Daily"); // Default to daily if no days found
+                            }
+
+                            Connection connection = new Connection(depCity, arrCity, tripDuration,
+                                    qtyStops, stopCities, daysList, routeList);
+                            connection.setId(connId);
+                            dbConnection.addConnection(connection);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error loading connection " + connId + ": " + e.getMessage());
+                    }
+                }
+            }
+
+            System.out.println(ANSI_GREEN + "Loaded " + dbConnection.getAllConnections().size()
+                    + " connections from database" + ANSI_RESET);
+
+        } catch (SQLException e) {
+            System.err.println(ANSI_RED + "Error loading from database: " + e.getMessage() + ANSI_RESET);
+            e.printStackTrace();
+        }
+
+        // Assign loaded objects to instance fields
+        this.dbCities = dbCities;
+        this.dbConnection = dbConnection;
+        this.dbRoutes = dbRoutes;
+    }
 
     // Read the CSV file and populate the DBCities, DBConnection and DBRoutes
     // classes
@@ -292,6 +483,135 @@ public class PopulateDB {
         this.dbCities = dbCities;
         this.dbConnection = dbConnection;
         this.dbRoutes = dbRoutes;
+
+        // Now, insert the data into the SQLite database
+
+        /*
+         * IN ORDER
+         * Cities
+         * Routes
+         * routes_days
+         * Connection
+         * connection_days
+         */
+
+        // Database URL is configured (either default or custom)
+        String sql = "INSERT OR IGNORE INTO Cities(name) VALUES(?)";
+
+        try (var conn = DriverManager.getConnection(dbUrl);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            for (String c : dbCities.getAllCityNames()) {
+                pstmt.setString(1, c);
+                pstmt.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
+        sql = "INSERT OR IGNORE INTO Routes(routeID, departureDateTime, arrivalDateTime, traintype, firstClassPrice, secondClassPrice, departureCity, arrivalCity) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (var conn = DriverManager.getConnection(dbUrl);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            for (Routes r : dbRoutes.getRoutes()) {
+                pstmt.setString(1, r.getRouteID());
+                pstmt.setString(2, r.getDepartureDateTime().toString());
+                pstmt.setString(3, r.getArrivalDateTime().toString());
+                pstmt.setString(4, r.getTraintype());
+                pstmt.setInt(5, r.getFirstClassPrice());
+                pstmt.setInt(6, r.getSecondClassPrice());
+                pstmt.setString(7, r.getDepartureCity().getName());
+                pstmt.setString(8, r.getArrivalCity().getName());
+                pstmt.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
+        sql = "INSERT OR IGNORE INTO route_days(routeID, dayOfOperation) VALUES(?, ?)";
+
+        try (var conn = DriverManager.getConnection(dbUrl);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            for (Routes route : dbRoutes.getRoutes()) {
+                for (String day : route.getDaysofoperation()) {
+                    pstmt.setString(1, route.getRouteID());
+                    pstmt.setString(2, day);
+                    pstmt.executeUpdate();
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
+        sql = "INSERT OR IGNORE INTO Connection(id, tripDuration, qtyStops, firstClassPrice, secondClassPrice, firstRouteID, secondRouteID, thirdRouteID, departureCity, arrivalCity, firstStop, secondStop) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (var conn = DriverManager.getConnection(dbUrl);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            for (Connection connection : dbConnection.getAllConnections()) {
+                pstmt.setString(1, connection.getId());
+                pstmt.setString(2, connection.getTripDuration().toString());
+                pstmt.setInt(3, connection.getQtyStops());
+                pstmt.setInt(4, connection.getFirstClassPrice());
+                pstmt.setInt(5, connection.getSecondClassPrice());
+                pstmt.setString(6, connection.getRoutes().get(0).getRouteID());
+
+                // check if there are stops to set the route IDs and stop city names
+
+                // 1 stop -> 2 routes & 1 stop city
+                // 2 stops -> 3 routes & 2 stop cities
+                // 0 stops -> 1 route & no stop city
+                if (connection.getQtyStops() == 1) {
+                    pstmt.setString(7, connection.getRoutes().get(1).getRouteID());
+                    pstmt.setString(8, null);
+                    pstmt.setString(9, connection.getDepartureCity().getName());
+                    pstmt.setString(10, connection.getArrivalCity().getName());
+                    pstmt.setString(11, connection.getStopCities().get(0).getName());
+                    pstmt.setString(12, null);
+                } else if (connection.getQtyStops() == 2) {
+                    pstmt.setString(7, connection.getRoutes().get(1).getRouteID());
+                    pstmt.setString(8, connection.getRoutes().get(2).getRouteID());
+                    pstmt.setString(9, connection.getDepartureCity().getName());
+                    pstmt.setString(10, connection.getArrivalCity().getName());
+                    pstmt.setString(11, connection.getStopCities().get(0).getName());
+                    pstmt.setString(12, connection.getStopCities().get(1).getName());
+                } else {
+                    pstmt.setString(7, null);
+                    pstmt.setString(8, null);
+                    pstmt.setString(9, connection.getDepartureCity().getName());
+                    pstmt.setString(10, connection.getArrivalCity().getName());
+                    pstmt.setString(11, null);
+                    pstmt.setString(12, null);
+                }
+                pstmt.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
+        sql = "INSERT OR IGNORE INTO connection_days(connectionID, dayOfOperation) VALUES(?, ?)";
+
+        try (var conn = DriverManager.getConnection(dbUrl);
+                var pstmt = conn.prepareStatement(sql)) {
+
+            for (Connection connection : dbConnection.getAllConnections()) {
+                for (String day : connection.getDaysOfOperation()) {
+                    pstmt.setString(1, connection.getId());
+                    pstmt.setString(2, day);
+                    pstmt.executeUpdate();
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+
     }
 
     /**
