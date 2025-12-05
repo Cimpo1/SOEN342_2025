@@ -13,12 +13,14 @@ Connection_Select : <u>Exit:</u> ConfirmSelectionResult
 Connection_Select -> Main_Menu
 Main_Menu --> Book_Trip : [SelectedConnection != null]SelectBookTrip
 Book_Trip : <u>Entry:</u> PromptUser
-Book_Trip : <u>Exit:</u> ConfirmBooking
 Book_Trip --> Add_Reservation : SelectAddReservation
 Add_Reservation : <u>Entry:</u> PromptUserForInfo
-Add_Reservation : <u>Do:</u> CreateReservation
-Add_Reservation : <u>Exit:</u> ConfirmReservation
-Add_Reservation -> Book_Trip
-Book_Trip -> Main_Menu : EndBooking
+Add_Reservation : <u>Do:</u> SearchClientInDatabase
+Add_Reservation--> Add_Client : [ClientNotFound]
+Add_Reservation -> Book_Trip : [ClientFound] / ConfirmReservationAndIssueTicket
+Add_Client : <u>Do:</u> AddClientToDatabase
+Add_Client : <u>Exit:</u> ConfirmClientAddition
+Add_Client --> Add_Reservation
+Book_Trip -> Main_Menu : EndBooking / ConfirmBooking
 Main_Menu --> [*] : Exit
 @enduml
